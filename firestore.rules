@@ -1,0 +1,199 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === FUNCIONES HELPER ===
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isPlatformAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.globalType == 'platform_admin';
+    }
+
+    function isOwnProfile(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasTenantMembership(tenantId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/tenants/$(tenantId)/members/$(request.auth.uid));
+    }
+
+    function preserveImmutableFields() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt', 'createdBy']);
+    }
+
+    // === COLECCIONES GLOBALES ===
+
+    // Users: lectura propia + PlatformAdmin; escritura PlatformAdmin
+    match /users/{userId} {
+      allow read: if isOwnProfile(userId) || isPlatformAdmin();
+      allow create: if isPlatformAdmin();
+      allow update: if isPlatformAdmin() && preserveImmutableFields();
+      allow delete: if false;
+    }
+
+    // Platform Config: solo PlatformAdmin
+    match /_gl_platform_config/{configId} {
+      allow read, write: if isPlatformAdmin();
+    }
+
+    // Modules: solo PlatformAdmin
+    match /_gl_modules/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Feature Flags: solo PlatformAdmin
+    match /_gl_feature_flags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Environments: solo PlatformAdmin
+    match /_gl_environments/{envId} {
+      allow read, write: if isPlatformAdmin();
+    }
+
+    // Releases: solo PlatformAdmin
+    match /_gl_releases/{releaseId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Security Policies: solo PlatformAdmin
+    match /_gl_security_policies/{policyId} {
+      allow read, write: if isPlatformAdmin();
+    }
+
+    // Navigation: lectura autenticados; escritura PlatformAdmin
+    match /_gl_navigation/{navId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /_gl_navigation_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Catalogs: lectura autenticados; escritura PlatformAdmin
+    match /_gl_catalogs/{catalogId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /_gl_catalog_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Entities & Governance: solo PlatformAdmin
+    match /_gl_entities/{entityId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /_gl_relationships/{relationId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /_gl_validation_rules/{ruleId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    match /_gl_reference_models/{modelId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Audit Log: lectura autorizados; escritura solo functions
+    match /_gl_audit_log/{eventId} {
+      allow read: if isPlatformAdmin();
+      allow write: if false; // Solo Cloud Functions
+    }
+
+    match /_gl_event_catalog/{eventType} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Jobs / Errors / Incidents: operadores
+    match /_gl_jobs/{jobId} {
+      allow read: if isPlatformAdmin();
+      allow write: if false; // Solo Cloud Functions
+    }
+
+    match /_gl_errors/{errorId} {
+      allow read: if isPlatformAdmin();
+      allow write: if false;
+    }
+
+    match /_gl_incidents/{incidentId} {
+      allow read: if isPlatformAdmin();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Automation
+    match /_gl_automation_rules/{ruleId} {
+      allow read: if isAuthenticated();
+      allow write: if isPlatformAdmin();
+    }
+
+    // Metrics
+    match /_gl_metrics/{metricId} {
+      allow read: if isPlatformAdmin();
+      allow write: if false;
+    }
+
+    // === COLECCIONES TENANT-SCOPED ===
+
+    match /tenants/{tenantId} {
+      allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+      allow create: if isPlatformAdmin();
+      allow update: if isPlatformAdmin() && preserveImmutableFields();
+      allow delete: if false;
+
+      // Members
+      match /members/{membershipId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if isPlatformAdmin();
+      }
+
+      // Roles
+      match /_tn_roles/{roleId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if isPlatformAdmin();
+      }
+
+      // Tenant Modules
+      match /_tn_modules/{moduleId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if isPlatformAdmin();
+      }
+
+      // Tenant Settings
+      match /_tn_settings/{settingId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if isPlatformAdmin();
+      }
+
+      // Navigation Overrides
+      match /_tn_navigation_overrides/{overrideId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if isPlatformAdmin();
+      }
+
+      // Event Log
+      match /_tn_event_log/{eventId} {
+        allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
+        allow write: if false; // Solo Cloud Functions
+      }
+    }
+  }
+}
