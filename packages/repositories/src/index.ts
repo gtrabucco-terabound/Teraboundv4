@@ -9,6 +9,7 @@ export type { PlatformConfigRepository } from './contracts/platform-config-repos
 export type { FeatureFlagsRepository } from './contracts/feature-flags-repository';
 export type { EnvironmentsRepository } from './contracts/environments-repository';
 export type { ReleasesRepository } from './contracts/releases-repository';
+export type { TenantsRepository } from './contracts/tenants-repository';
 
 // Implementaciones Firestore
 export { FirestoreModulesRepository } from './firestore/firestore-modules-repository';
@@ -16,3 +17,4 @@ export { FirestorePlatformConfigRepository } from './firestore/firestore-platfor
 export { FirestoreFeatureFlagsRepository } from './firestore/firestore-feature-flags-repository';
 export { FirestoreEnvironmentsRepository } from './firestore/firestore-environments-repository';
 export { FirestoreReleasesRepository } from './firestore/firestore-releases-repository';
+export { FirestoreTenantsRepository } from './firestore/firestore-tenants-repository';
