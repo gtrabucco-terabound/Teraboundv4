@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { getFirebaseAuth } from '@terabound/firebase-client';
+import { useAuth } from '@terabound/auth';
 import {
   LayoutDashboard,
   Server,
@@ -22,9 +25,12 @@ import {
   BarChart3,
   ChevronRight,
   X,
+  LogOut,
+  Loader2,
 } from 'lucide-react';
 
 // Menú del admin según §12 de la spec
+// ... (mantenemos la variable navigation igual)
 const navigation = [
   {
     label: 'Dashboard',
@@ -167,7 +173,29 @@ function SidebarItem({
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  const handleLogout = async () => {
+    await signOut(getFirebaseAuth());
+    router.push('/login');
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-950 gap-4">
+        <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+        <p className="text-surface-400 text-sm font-medium animate-pulse">Verificando seguridad...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -210,12 +238,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
 
-        {/* Versión */}
-        {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-t border-surface-700/20">
-            <span className="text-[10px] text-surface-600">v0.1.0 — Control Plane</span>
-          </div>
-        )}
+        {/* Footer (Logout) */}
+        <div className="p-2 border-t border-surface-700/20 space-y-1">
+          {!sidebarCollapsed && (
+            <div className="px-3 py-2 flex items-center gap-3 mb-1">
+               <div className="w-7 h-7 rounded-full bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-brand-400 uppercase">
+                    {user.email?.charAt(0) || 'A'}
+                  </span>
+               </div>
+               <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-surface-200 truncate">{user.email}</p>
+                  <p className="text-[9px] text-surface-500 truncate">Admin Conectado</p>
+               </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className={`sidebar-item w-full text-red-400 hover:text-red-300 hover:bg-red-500/5 ${sidebarCollapsed ? 'justify-center' : ''}`}
+            title="Cerrar Sesión"
+          >
+            <LogOut className="w-4.5 h-4.5 shrink-0" />
+            {!sidebarCollapsed && <span>Cerrar Sesión</span>}
+          </button>
+          {!sidebarCollapsed && (
+            <div className="px-4 py-2 mt-1">
+              <span className="text-[10px] text-surface-600 block">v0.1.0 — Control Plane</span>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* ===== MAIN CONTENT ===== */}
@@ -238,7 +289,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-soft" />
-              <span className="text-xs text-emerald-400 font-medium">Sistema Operativo</span>
+              <span className="text-xs text-emerald-400 font-medium">Sistema Inteligente</span>
             </div>
           </div>
         </header>

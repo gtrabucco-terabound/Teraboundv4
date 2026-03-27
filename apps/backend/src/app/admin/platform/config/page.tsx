@@ -79,9 +79,9 @@ export default function PlatformConfigPage() {
         setVersion(config.version ?? 1);
       }
       setStatus('idle');
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PlatformConfig] Error al cargar:', err);
-      setErrorMsg('No se pudo cargar la configuración desde Firestore.');
+      setErrorMsg(`Error de carga de Firestore: ${err.message || 'Error desconocido'}`);
       setStatus('error');
     }
   }, []);
