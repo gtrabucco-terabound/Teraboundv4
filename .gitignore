@@ -27,3 +27,8 @@ npm-debug.log*
 
 # firebase
 .firebase/
+
+# Secretos y Credenciales (IMPORTANTE)
+scripts/serviceAccount.json
+*.json.local
+.runtimeconfig.json
