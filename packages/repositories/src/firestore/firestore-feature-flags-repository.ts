@@ -29,9 +29,21 @@ export class FirestoreFeatureFlagsRepository implements FeatureFlagsRepository {
   async getByKey(key: string): Promise<FeatureFlag | null> {
     const q = query(this.col, where('key', '==', key));
     const snap = await getDocs(q);
+
+    // 1. Verificamos si la consulta devolvió documentos
     if (snap.empty) return null;
+
+    // 2. Obtenemos el primer documento
     const d = snap.docs[0];
-    return { id: d.id, ...this.mapFromFirestore(d.data()) } as FeatureFlag;
+
+    // 3. Verificación de seguridad para TypeScript (Soluciona el error de Vercel)
+    if (!d || !d.exists()) return null;
+
+    // 4. Retornamos el objeto mapeado con el ID
+    return {
+      id: d.id,
+      ...this.mapFromFirestore(d.data() as Record<string, unknown>)
+    } as FeatureFlag;
   }
 
   async list(filters?: { enabled?: boolean; scope?: string }): Promise<FeatureFlag[]> {
