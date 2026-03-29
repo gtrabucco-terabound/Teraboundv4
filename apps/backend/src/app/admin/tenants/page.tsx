@@ -7,6 +7,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Building2, 
   Plus, 
@@ -32,6 +33,7 @@ const statusStyles: Record<string, { bg: string; text: string; icon: any }> = {
 };
 
 export default function TenantsPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -219,10 +221,16 @@ export default function TenantsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 pt-2">
-                       <button className="flex-1 btn-secondary text-[11px] py-2 h-auto font-bold uppercase tracking-wider">
+                       <button 
+                         onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
+                         className="flex-1 btn-secondary text-[11px] py-2 h-auto font-bold uppercase tracking-wider"
+                       >
                           Configuración
                        </button>
-                       <button className="p-2 rounded-lg bg-surface-800/50 text-surface-400 hover:text-brand-400 transition-colors border border-surface-700/50">
+                       <button 
+                         onClick={() => window.open(`http://${tenant.id}.terabound.com`, '_blank')}
+                         className="p-2 rounded-lg bg-surface-800/50 text-surface-400 hover:text-brand-400 transition-colors border border-surface-700/50"
+                       >
                           <ExternalLink className="w-4 h-4" />
                        </button>
                     </div>
