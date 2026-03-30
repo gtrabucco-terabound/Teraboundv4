@@ -42,6 +42,17 @@ export default function RolesPage() {
   const [selectedRole, setSelectedRole] = useState<RoleDefinition | null>(null);
   const [permissionQuery, setPermissionQuery] = useState('');
 
+  // Estados para nuevo rol
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    key: '',
+    description: '',
+    isSystem: false,
+    active: true,
+  });
+
   const repo = new FirestoreRolesRepository();
 
   useEffect(() => {
@@ -65,6 +76,34 @@ export default function RolesPage() {
     }
   };
 
+  const handleCreateRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.key) return;
+
+    try {
+      setIsSaving(true);
+      await repo.create({
+        ...formData,
+        permissions: [],
+        scopes: {},
+      });
+      setIsDrawerOpen(false);
+      setFormData({
+        name: '',
+        key: '',
+        description: '',
+        isSystem: false,
+        active: true,
+      });
+      await loadRoles();
+    } catch (err: any) {
+      console.error('[Roles] Create Error:', err);
+      alert('Error al crear el rol.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleTogglePermission = (permissionKey: string) => {
     if (!selectedRole) return;
     const hasPermission = selectedRole.permissions.includes(permissionKey);
@@ -73,7 +112,19 @@ export default function RolesPage() {
       : [...selectedRole.permissions, permissionKey];
     
     setSelectedRole({ ...selectedRole, permissions: newPermissions });
-    // Aquí se llamaría al repo.update en un entorno real al guardar
+  };
+
+  const handleSavePermissions = async () => {
+     if (!selectedRole || !selectedRole.id) return;
+     try {
+       setIsSaving(true);
+       await repo.update(selectedRole.id, { permissions: selectedRole.permissions });
+       alert('Permisos actualizados correctamente.');
+     } catch (err) {
+       alert('Error al guardar los permisos.');
+     } finally {
+       setIsSaving(false);
+     }
   };
 
   const filteredRoles = roles.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -93,12 +144,15 @@ export default function RolesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-160px)] flex gap-6">
+    <div className="h-[calc(100vh-160px)] flex gap-6 relative">
       {/* Sidebar - Roles List */}
       <div className="w-80 flex flex-col gap-4">
         <div className="flex items-center justify-between">
            <h2 className="text-xs font-black uppercase tracking-widest text-surface-500">Roles del Sistema</h2>
-           <button className="p-1 px-2 rounded bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 text-[10px] font-bold border border-brand-500/20 transition-colors">
+           <button 
+             onClick={() => setIsDrawerOpen(true)}
+             className="p-1 px-2 rounded bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 text-[10px] font-bold border border-brand-500/20 transition-colors"
+           >
               <Plus className="w-3.5 h-3.5 inline mr-1" /> Nuevo
            </button>
         </div>
@@ -154,8 +208,12 @@ export default function RolesPage() {
                   <button className="btn-secondary text-[10px] uppercase font-bold py-2">
                      <Copy className="w-3.5 h-3.5 mr-2" /> Clonar
                   </button>
-                  <button className="btn-primary text-[10px] uppercase font-bold py-2 px-6">
-                     Guardar Cambios
+                  <button 
+                    onClick={handleSavePermissions}
+                    disabled={isSaving}
+                    className="btn-primary text-[10px] uppercase font-bold py-2 px-6 disabled:opacity-50"
+                  >
+                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Cambios'}
                   </button>
                </div>
             </div>
@@ -229,6 +287,93 @@ export default function RolesPage() {
           </div>
         )}
       </div>
+
+      {/* Drawer Overlay - Nuevo Rol */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-50">Crear Nuevo Rol</h2>
+                <p className="text-sm text-surface-400 mt-1">Define un nuevo perfil de permisos para el sistema.</p>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateRole} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Nombre del Rol</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="Ej: Auditor de Finanzas"
+                    className="input"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Key Identificadora (Slug)</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="ej: finance_auditor"
+                    className="input font-mono"
+                    value={formData.key}
+                    onChange={(e) => setFormData({ ...formData, key: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Descripción</label>
+                  <textarea 
+                    rows={4}
+                    placeholder="Describe las responsabilidades de este rol..."
+                    className="input py-3 resize-none"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+              </div>
+            </form>
+
+            <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="btn-secondary py-3"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                onClick={handleCreateRole}
+                disabled={isSaving || !formData.name || !formData.key}
+                className="btn-primary py-3"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creando Rol...
+                  </>
+                ) : 'Crear Rol'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
