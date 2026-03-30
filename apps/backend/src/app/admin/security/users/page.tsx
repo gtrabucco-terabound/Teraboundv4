@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Search, 
-  Loader2, 
-  AlertCircle, 
-  UserCheck, 
-  UserMinus, 
+import {
+  Shield,
+  Search,
+  Loader2,
+  AlertCircle,
+  UserCheck,
+  UserMinus,
   Activity,
   MoreVertical,
   Mail,
@@ -92,7 +92,7 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -121,7 +121,7 @@ export default function UsersPage() {
             Administración de cuentas de plataforma, operadores de soporte y auditores.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsDrawerOpen(true)}
           className="btn-primary flex items-center gap-2"
         >
@@ -134,9 +134,9 @@ export default function UsersPage() {
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
-          <input 
-            type="text" 
-            placeholder="Buscar por email, nombre o UID..." 
+          <input
+            type="text"
+            placeholder="Buscar por email, nombre o UID..."
             className="input pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -189,9 +189,8 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        user.globalType === GlobalType.PLATFORM_ADMIN ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-surface-800 text-surface-400 border border-surface-700'
-                      }`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${user.globalType === GlobalType.PLATFORM_ADMIN ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-surface-800 text-surface-400 border border-surface-700'
+                        }`}>
                         <Key className="w-3 h-3" />
                         {user.globalType.replace('_', ' ')}
                       </span>
@@ -210,11 +209,10 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => handleToggleStatus(user)}
-                          className={`p-2 rounded-lg transition-colors border border-surface-800 hover:border-surface-700 ${
-                            user.status === UserStatus.ACTIVE ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
-                          }`}
+                        <button
+                          onClick={() => handleToggleStatus(user.id, user.status)}
+                          className={`p-2 rounded-lg transition-colors border border-surface-800 hover:border-surface-700 ${user.status === UserStatus.ACTIVE ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
                           title={user.status === UserStatus.ACTIVE ? 'Bloquear Usuario' : 'Activar Usuario'}
                         >
                           {user.status === UserStatus.ACTIVE ? <UserMinus className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
@@ -242,11 +240,11 @@ export default function UsersPage() {
 
       {/* Drawer Overlay - Nuevo Usuario */}
       {isDrawerOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
           onClick={() => setIsDrawerOpen(false)}
         >
-          <div 
+          <div
             className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -255,7 +253,7 @@ export default function UsersPage() {
                 <h2 className="text-xl font-display font-bold text-surface-50">Crear Usuario de Plataforma</h2>
                 <p className="text-sm text-surface-400 mt-1">Alta de perfiles administrativos y de soporte.</p>
               </div>
-              <button 
+              <button
                 onClick={() => setIsDrawerOpen(false)}
                 className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
               >
@@ -267,9 +265,9 @@ export default function UsersPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-surface-500 uppercase">Nombre Completo</label>
-                  <input 
+                  <input
                     required
-                    type="text" 
+                    type="text"
                     placeholder="Ej: Juan Pérez"
                     className="input"
                     value={formData.displayName}
@@ -278,9 +276,9 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-surface-500 uppercase">Correo Electrónico</label>
-                  <input 
+                  <input
                     required
-                    type="email" 
+                    type="email"
                     placeholder="juan.perez@terabound.com"
                     className="input"
                     value={formData.email}
@@ -289,7 +287,7 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-surface-500 uppercase">Tipo de Usuario (Plataforma)</label>
-                  <select 
+                  <select
                     className="input appearance-none bg-surface-950"
                     value={formData.globalType}
                     onChange={(e) => setFormData({ ...formData, globalType: e.target.value })}
@@ -305,14 +303,14 @@ export default function UsersPage() {
             </form>
 
             <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
                 className="btn-secondary py-3"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 type="submit"
                 onClick={handleCreateUser}
                 disabled={isSaving || !formData.email || !formData.displayName}
