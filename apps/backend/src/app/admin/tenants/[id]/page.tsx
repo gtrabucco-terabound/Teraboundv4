@@ -25,8 +25,12 @@ import {
   Trash2,
   Plus
 } from 'lucide-react';
-import { FirestoreTenantsRepository } from '@terabound/repositories';
-import type { Tenant } from '@terabound/domain';
+import { 
+  FirestoreTenantsRepository, 
+  FirestoreModulesRepository, 
+  FirestoreTenantsModulesRepository 
+} from '@terabound/repositories';
+import type { Tenant, ModuleDefinition, TenantModule } from '@terabound/domain';
 
 interface TenantDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -37,29 +41,41 @@ export default function TenantDetailsPage({ params }: TenantDetailsPageProps) {
   const router = useRouter();
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [globalModules, setGlobalModules] = useState<ModuleDefinition[]>([]);
+  const [tenantModules, setTenantModules] = useState<TenantModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'modules' | 'branding' | 'billing'>('profile');
 
   const repo = new FirestoreTenantsRepository();
+  const modulesRepo = new FirestoreModulesRepository();
+  const tenantModulesRepo = new FirestoreTenantsModulesRepository();
 
   useEffect(() => {
-    loadTenant();
+    loadData();
   }, [id]);
 
-  const loadTenant = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await repo.getById(id);
-      if (!data) {
+      const [tenantData, modulesData, tenantModulesData] = await Promise.all([
+        repo.getById(id),
+        modulesRepo.list({ visibility: 'tenant-available' }),
+        tenantModulesRepo.list(id)
+      ]);
+
+      if (!tenantData) {
         setError('Tenant no encontrado.');
         return;
       }
-      setTenant(data);
+
+      setTenant(tenantData);
+      setGlobalModules(modulesData);
+      setTenantModules(tenantModulesData);
     } catch (err: any) {
-      console.error('[TenantDetails] Error:', err);
-      setError('Error al cargar los detalles del cliente.');
+      console.error('[TenantDetails] Error loading data:', err);
+      setError('Error al cargar la información completa del cliente.');
     } finally {
       setLoading(false);
     }
@@ -76,6 +92,31 @@ export default function TenantDetailsPage({ params }: TenantDetailsPageProps) {
       alert('Error al guardar los cambios.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleToggleModule = async (moduleId: string, currentStatus: string) => {
+    if (!tenant) return;
+    const newStatus = currentStatus === 'enabled' ? 'disabled' : 'enabled';
+    
+    try {
+      await tenantModulesRepo.upsert(id, {
+        moduleId,
+        status: newStatus as any
+      });
+      // Update local state
+      setTenantModules(prev => {
+        const index = prev.findIndex(m => m.moduleId === moduleId);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = { ...updated[index]!, status: newStatus as any };
+          return updated;
+        }
+        return [...prev, { moduleId, status: newStatus as any } as TenantModule];
+      });
+    } catch (err: any) {
+      console.error('[TenantModules] Toggle Error:', err);
+      alert('Error al actualizar el estado del módulo.');
     }
   };
 
@@ -275,41 +316,39 @@ export default function TenantDetailsPage({ params }: TenantDetailsPageProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-surface-950/40 border border-surface-800 flex items-center justify-between group hover:border-brand-500/20 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 text-xl font-bold">
-                      📦
+                {globalModules.length > 0 ? globalModules.map((mod) => {
+                   const tMod = tenantModules.find(m => m.moduleId === mod.id);
+                   const isEnabled = tMod?.status === 'enabled';
+                   
+                   return (
+                    <div key={mod.id} className={`p-4 rounded-2xl bg-surface-950/40 border border-surface-800 flex items-center justify-between group hover:border-brand-500/20 transition-all ${!isEnabled ? 'opacity-70' : ''}`}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 text-xl font-bold">
+                          {mod.icon || '📦'}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-surface-50 text-sm">{mod.name}</h4>
+                          <p className="text-[10px] text-surface-600 uppercase font-bold tracking-widest mt-0.5">{mod.category || mod.type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isEnabled ? 'text-emerald-400' : 'text-surface-600'}`}>
+                          {isEnabled ? 'Activo' : 'Inactivo'}
+                        </span>
+                        <button 
+                          onClick={() => handleToggleModule(mod.id!, tMod?.status || 'disabled')}
+                          className={`w-10 h-5 rounded-full relative transition-colors ${isEnabled ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-surface-800 border-surface-700'}`}
+                        >
+                          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isEnabled ? 'right-1 bg-emerald-400 shadow-[0_0_8px_rgba(var(--emerald-400-rgb),0.5)]' : 'left-1 bg-surface-600'}`} />
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-surface-50 text-sm">Logística y Stock</h4>
-                      <p className="text-[10px] text-surface-600 uppercase font-bold tracking-widest mt-0.5">Módulo Base</p>
-                    </div>
+                   );
+                }) : (
+                  <div className="col-span-full py-20 text-center text-surface-500 italic">
+                    No hay módulos globales marcados como disponibles para tenants en la colección _gl_modules.
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Activo</span>
-                    <div className="w-10 h-5 bg-emerald-500/20 border border-emerald-500/30 rounded-full relative">
-                      <div className="absolute right-1 top-1 w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(var(--emerald-400-rgb),0.5)]" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-surface-950/40 border border-surface-800 flex items-center justify-between group hover:border-brand-500/20 transition-all opacity-50 grayscale">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-xl font-bold">
-                      👔
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-surface-50 text-sm">Recursos Humanos</h4>
-                      <p className="text-[10px] text-surface-600 uppercase font-bold tracking-widest mt-0.5">Módulo Premium</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-surface-600 uppercase tracking-widest">Inactivo</span>
-                    <div className="w-10 h-5 bg-surface-800 border border-surface-700 rounded-full relative">
-                      <div className="absolute left-1 top-1 w-3 h-3 bg-surface-600 rounded-full" />
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}

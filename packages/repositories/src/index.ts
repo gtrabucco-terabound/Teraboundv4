@@ -10,6 +10,7 @@ export type { FeatureFlagsRepository } from './contracts/feature-flags-repositor
 export type { EnvironmentsRepository } from './contracts/environments-repository';
 export type { ReleasesRepository } from './contracts/releases-repository';
 export type { TenantsRepository } from './contracts/tenants-repository';
+export type { TenantsModulesRepository } from './contracts/tenants-modules-repository';
 
 // Implementaciones Firestore
 export { FirestoreModulesRepository } from './firestore/firestore-modules-repository';
@@ -18,3 +19,4 @@ export { FirestoreFeatureFlagsRepository } from './firestore/firestore-feature-f
 export { FirestoreEnvironmentsRepository } from './firestore/firestore-environments-repository';
 export { FirestoreReleasesRepository } from './firestore/firestore-releases-repository';
 export { FirestoreTenantsRepository } from './firestore/firestore-tenants-repository';
+export { FirestoreTenantsModulesRepository } from './firestore/firestore-tenants-modules-repository';
