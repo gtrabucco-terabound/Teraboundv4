@@ -4,7 +4,8 @@
 // ============================================================
 
 // Core Context
-export type { TenantContext, AuthenticatedUser, AuditEvent } from './contracts/tenant-context';
+export type { TenantContext, AuthenticatedUser, UserRecord, AuditEvent } from './contracts/tenant-context';
+
 
 // Platform
 export type {

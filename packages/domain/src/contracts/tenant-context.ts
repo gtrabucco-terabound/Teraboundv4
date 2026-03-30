@@ -32,6 +32,13 @@ export interface AuthenticatedUser {
   deletedAt?: Date;
 }
 
+/** Registro de usuario en base de datos global — collection: 'users' */
+export interface UserRecord extends AuthenticatedUser {
+  metadata?: Record<string, unknown>;
+  preferences?: Record<string, unknown>;
+}
+
+
 /** Evento de auditoría — todo cambio relevante genera uno */
 export interface AuditEvent {
   eventType: string;

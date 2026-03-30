@@ -27,7 +27,12 @@ import {
   X,
   LogOut,
   Loader2,
+  Users,
+  Fingerprint,
+  Lock,
+  Key
 } from 'lucide-react';
+
 
 // Menú del admin según §12 de la spec
 // ... (mantenemos la variable navigation igual)
@@ -57,11 +62,12 @@ const navigation = [
     label: 'Seguridad',
     icon: Shield,
     children: [
-      { label: 'Usuarios', href: '/admin/security/users', icon: Shield },
-      { label: 'Memberships', href: '/admin/security/memberships', icon: Shield },
-      { label: 'Roles', href: '/admin/security/roles', icon: Shield },
-      { label: 'Políticas', href: '/admin/security/policies', icon: Shield },
+      { label: 'Usuarios', href: '/admin/security/users', icon: Users },
+      { label: 'Memberships', href: '/admin/security/memberships', icon: Key },
+      { label: 'Roles', href: '/admin/security/roles', icon: Fingerprint },
+      { label: 'Políticas', href: '/admin/security/policies', icon: Lock },
     ],
+
   },
   {
     label: 'Navegación',
