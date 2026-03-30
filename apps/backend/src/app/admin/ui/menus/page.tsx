@@ -25,15 +25,15 @@ import { FirestoreNavigationRepository, FirestoreNavigationItemsRepository } fro
 import type { NavigationSchema, NavigationItem } from '@terabound/domain';
 
 // --- Subcomponente para Item de Árbol ---
-function MenuItemNode({ 
-  item, 
-  children, 
+function MenuItemNode({
+  item,
+  children,
   depth = 0,
   onEdit,
   onAddChild
-}: { 
-  item: NavigationItem; 
-  children?: React.ReactNode; 
+}: {
+  item: NavigationItem;
+  children?: React.ReactNode;
   depth?: number;
   onEdit: (item: NavigationItem) => void;
   onAddChild: (parentId: string) => void;
@@ -43,60 +43,58 @@ function MenuItemNode({
 
   return (
     <div className="space-y-1">
-      <div 
+      <div
         className={`group flex items-center gap-3 p-2 rounded-xl transition-all border border-transparent hover:bg-surface-800/40 hover:border-surface-700/50 cursor-pointer`}
         style={{ marginLeft: `${depth * 24}px` }}
       >
         <div className="flex items-center gap-2 flex-1">
-           <button 
-             onClick={() => setIsExpanded(!isExpanded)}
-             className={`p-1 rounded hover:bg-surface-700 transition-colors ${!hasChildren ? 'invisible' : ''}`}
-           >
-              {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-surface-400" /> : <ChevronRight className="w-3.5 h-3.5 text-surface-400" />}
-           </button>
-           
-           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-             item.active ? 'bg-surface-900 border border-surface-800 text-brand-400' : 'bg-surface-950 border border-surface-900 text-surface-600'
-           }`}>
-             <MenuIcon className="w-4 h-4" />
-           </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`p-1 rounded hover:bg-surface-700 transition-colors ${!hasChildren ? 'invisible' : ''}`}
+          >
+            {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-surface-400" /> : <ChevronRight className="w-3.5 h-3.5 text-surface-400" />}
+          </button>
 
-           <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                 <span className={`text-sm font-bold truncate ${item.active ? 'text-surface-100' : 'text-surface-600'}`}>
-                   {item.label}
-                 </span>
-                 {item.badgeType !== 'none' && item.badgeType && (
-                   <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase ${
-                     item.badgeType === 'error' ? 'bg-red-500/20 text-red-400' : 
-                     item.badgeType === 'warning' ? 'bg-orange-500/20 text-orange-400' : 
-                     'bg-blue-500/20 text-blue-400'
-                   }`}>
-                     {item.badgeType}
-                   </span>
-                 )}
-              </div>
-              <p className="text-[10px] text-surface-500 font-mono truncate">{item.route}</p>
-           </div>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.active ? 'bg-surface-900 border border-surface-800 text-brand-400' : 'bg-surface-950 border border-surface-900 text-surface-600'
+            }`}>
+            <MenuIcon className="w-4 h-4" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-bold truncate ${item.active ? 'text-surface-100' : 'text-surface-600'}`}>
+                {item.label}
+              </span>
+              {item.badgeType !== 'none' && item.badgeType && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase ${item.badgeType === 'error' ? 'bg-red-500/20 text-red-400' :
+                  item.badgeType === 'warning' ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-blue-500/20 text-blue-400'
+                  }`}>
+                  {item.badgeType}
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-surface-500 font-mono truncate">{item.route}</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-           <button 
-             onClick={() => onAddChild(item.id!)}
-             className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-brand-400 transition-colors"
-             title="Agregar Sub-item"
-           >
-             <Plus className="w-4 h-4" />
-           </button>
-           <button 
-             onClick={() => onEdit(item)}
-             className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100 transition-colors"
-           >
-             <Edit2 className="w-4 h-4" />
-           </button>
+          <button
+            onClick={() => onAddChild(item.id!)}
+            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-brand-400 transition-colors"
+            title="Agregar Sub-item"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onEdit(item)}
+            className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100 transition-colors"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
-      
+
       {isExpanded && children}
     </div>
   );
@@ -109,7 +107,7 @@ export default function NavigationMenusPage() {
   const [loading, setLoading] = useState(true);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<NavigationItem>>({
@@ -143,7 +141,13 @@ export default function NavigationMenusPage() {
       setLoading(true);
       const data = await schemaRepo.list();
       setSchemas(data);
-      if (data.length > 0) setSelectedSchema(data[0]);
+
+      if (data.length > 0) {
+        setSelectedSchema(data[0]!);
+      } else {
+        setSelectedSchema(null);
+      }
+
     } catch (err) {
       setError('Error al cargar esquemas de navegación.');
     } finally {
@@ -180,9 +184,9 @@ export default function NavigationMenusPage() {
     const buildNode = (item: NavigationItem, depth = 0): React.ReactNode => {
       const children = map.get(item.id!);
       return (
-        <MenuItemNode 
-          key={item.id} 
-          item={item} 
+        <MenuItemNode
+          key={item.id}
+          item={item}
           depth={depth}
           onEdit={(i) => { setFormData(i); setIsDrawerOpen(true); }}
           onAddChild={(pid) => { setFormData({ ...formData, parentId: pid, navId: selectedSchema?.id }); setIsDrawerOpen(true); }}
@@ -212,7 +216,7 @@ export default function NavigationMenusPage() {
       } else {
         await itemRepo.create(payload);
       }
-      
+
       setIsDrawerOpen(false);
       setFormData({
         label: '',
@@ -224,6 +228,7 @@ export default function NavigationMenusPage() {
         badgeType: 'none',
         requiredPermissions: []
       });
+      if (!selectedSchema?.id) return;
       await loadItems(selectedSchema.id);
     } catch (err) {
       alert('Error al guardar ítem: ' + (err as Error).message);
@@ -260,11 +265,10 @@ export default function NavigationMenusPage() {
             <button
               key={s.id}
               onClick={() => setSelectedSchema(s)}
-              className={`w-full text-left px-4 py-3 rounded-xl transition-all border ${
-                selectedSchema?.id === s.id 
-                  ? 'bg-brand-500/10 border-brand-500/30 text-brand-400 ring-1 ring-brand-500/20' 
-                  : 'bg-surface-900 border-surface-800 text-surface-400 hover:bg-surface-800 hover:border-surface-700'
-              }`}
+              className={`w-full text-left px-4 py-3 rounded-xl transition-all border ${selectedSchema?.id === s.id
+                ? 'bg-brand-500/10 border-brand-500/30 text-brand-400 ring-1 ring-brand-500/20'
+                : 'bg-surface-900 border-surface-800 text-surface-400 hover:bg-surface-800 hover:border-surface-700'
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-bold truncate">{s.name}</span>
@@ -281,11 +285,11 @@ export default function NavigationMenusPage() {
         <div className="p-6 border-b border-surface-800 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-lg font-display font-bold text-surface-100 flex items-center gap-2">
-               Constructor de Árbol: <span className="text-brand-400">{selectedSchema?.name || '...'}</span>
+              Constructor de Árbol: <span className="text-brand-400">{selectedSchema?.name || '...'}</span>
             </h1>
             <p className="text-xs text-surface-500 mt-1">Arrastra para reordenar (próximamente) o gestiona jerárquicamente.</p>
           </div>
-          <button 
+          <button
             disabled={!selectedSchema}
             onClick={() => { setFormData({ ...formData, parentId: undefined, navId: selectedSchema?.id }); setIsDrawerOpen(true); }}
             className="btn-primary flex items-center gap-2"
@@ -296,34 +300,34 @@ export default function NavigationMenusPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-           {itemsLoading ? (
-             <div className="h-full flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-surface-600 animate-spin" />
-             </div>
-           ) : items.length > 0 ? (
-             <div className="space-y-1">
-               {menuTree}
-             </div>
-           ) : (
-             <div className="h-full flex flex-col items-center justify-center text-surface-500 gap-3 grayscale opacity-40">
-                <MenuIcon className="w-12 h-12" />
-                <p className="text-sm italic">Este esquema aún no tiene ítems de menú definidos.</p>
-             </div>
-           )}
+          {itemsLoading ? (
+            <div className="h-full flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-surface-600 animate-spin" />
+            </div>
+          ) : items.length > 0 ? (
+            <div className="space-y-1">
+              {menuTree}
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-surface-500 gap-3 grayscale opacity-40">
+              <MenuIcon className="w-12 h-12" />
+              <p className="text-sm italic">Este esquema aún no tiene ítems de menú definidos.</p>
+            </div>
+          )}
         </div>
 
         <div className="p-4 bg-surface-950/30 border-t border-surface-800 flex items-center justify-between">
-           <div className="flex items-center gap-4 text-[11px] text-surface-500">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-brand-500" />
-                <span>Activo</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-surface-700" />
-                <span>Inactivo</span>
-              </div>
-           </div>
-           <p className="text-[10px] text-surface-600 font-mono">ModId: {selectedSchema?.key || 'null'}</p>
+          <div className="flex items-center gap-4 text-[11px] text-surface-500">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-brand-500" />
+              <span>Activo</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-surface-700" />
+              <span>Inactivo</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-surface-600 font-mono">ModId: {selectedSchema?.key || 'null'}</p>
         </div>
       </main>
 
@@ -356,13 +360,13 @@ export default function NavigationMenusPage() {
               <div className="space-y-5">
                 {/* Visual Check */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-surface-950/50 border border-surface-800">
-                   <div className="w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
-                      <MenuIcon className="w-5 h-5" />
-                   </div>
-                   <div>
-                      <p className="text-xs font-bold text-surface-100">{formData.label || 'Etiqueta de Menú'}</p>
-                      <p className="text-[10px] text-surface-500 font-mono truncate max-w-[200px]">{formData.route || '/ruta/por/defecto'}</p>
-                   </div>
+                  <div className="w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
+                    <MenuIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-surface-100">{formData.label || 'Etiqueta de Menú'}</p>
+                    <p className="text-[10px] text-surface-500 font-mono truncate max-w-[200px]">{formData.route || '/ruta/por/defecto'}</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -407,7 +411,7 @@ export default function NavigationMenusPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Visibilidad</label>
                     <select
                       className="input appearance-none bg-surface-950"
@@ -450,17 +454,17 @@ export default function NavigationMenusPage() {
                 </div>
 
                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Permisos Requeridos (CSV)</label>
-                   <div className="relative">
-                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-600" />
-                     <input
-                       type="text"
-                       placeholder="ej: nav.read, admin.manage"
-                       className="input pl-10 text-xs"
-                       value={formData.requiredPermissions?.join(', ')}
-                       onChange={(e) => setFormData({ ...formData, requiredPermissions: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                     />
-                   </div>
+                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Permisos Requeridos (CSV)</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-600" />
+                    <input
+                      type="text"
+                      placeholder="ej: nav.read, admin.manage"
+                      className="input pl-10 text-xs"
+                      value={formData.requiredPermissions?.join(', ')}
+                      onChange={(e) => setFormData({ ...formData, requiredPermissions: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                    />
+                  </div>
                 </div>
               </div>
             </form>
