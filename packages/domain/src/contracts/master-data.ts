@@ -7,9 +7,10 @@ export interface Catalog {
   id?: string;
   key: string;
   name: string;
-  scope: 'global' | 'tenant-overridable';
+  description?: string;
+  scope: 'global' | 'tenant';
+  isOverridable: boolean;
   active: boolean;
-  itemSchema?: Record<string, unknown>;
   createdAt: Date;
   createdBy: string;
   updatedAt: Date;

@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "seed:master-data": "ts-node src/seed/master-data-seed-runner.ts"
   },
   "dependencies": {
     "@terabound/domain": "*",

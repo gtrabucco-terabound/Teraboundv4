@@ -13,6 +13,7 @@ export type { TenantsRepository } from './contracts/tenants-repository';
 export type { TenantsModulesRepository } from './contracts/tenants-modules-repository';
 export * from './contracts/security-repositories';
 export * from './contracts/navigation-repository';
+export * from './contracts/catalog-repository';
 
 // Implementaciones Firestore
 export { FirestoreModulesRepository } from './firestore/firestore-modules-repository';
@@ -27,5 +28,7 @@ export * from './firestore/firestore-memberships-repository';
 export * from './firestore/firestore-roles-repository';
 export * from './firestore/firestore-policies-repository';
 export * from './firestore/firestore-navigation-repository';
+export * from './firestore/firestore-catalog-repository';
 export * from './seed/security-seed';
+export * from './seed/master-data-seed';
 
