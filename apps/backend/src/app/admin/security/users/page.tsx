@@ -210,7 +210,7 @@ export default function UsersPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleToggleStatus(user.id, user.status)}
+                          onClick={() => handleToggleStatus(user.userId, user.status)}
                           className={`p-2 rounded-lg transition-colors border border-surface-800 hover:border-surface-700 ${user.status === UserStatus.ACTIVE ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
                             }`}
                           title={user.status === UserStatus.ACTIVE ? 'Bloquear Usuario' : 'Activar Usuario'}
