@@ -11,6 +11,7 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@terabound/firebase-client';
 import type { Tenant } from '@terabound/domain';
 import type { TenantsRepository } from '../contracts/tenants-repository';
 
@@ -18,7 +19,7 @@ export class FirestoreTenantsRepository implements TenantsRepository {
   private readonly collectionName = 'tenants';
 
   async list(): Promise<Tenant[]> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const q = query(collection(db, this.collectionName), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
@@ -28,7 +29,7 @@ export class FirestoreTenantsRepository implements TenantsRepository {
   }
 
   async getById(id: string): Promise<Tenant | null> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const docRef = doc(db, this.collectionName, id);
     const snapshot = await getDoc(docRef);
     if (!snapshot.exists()) return null;
@@ -36,7 +37,7 @@ export class FirestoreTenantsRepository implements TenantsRepository {
   }
 
   async create(tenant: Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<string> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const docRef = await addDoc(collection(db, this.collectionName), {
       ...tenant,
       createdAt: serverTimestamp(),

@@ -75,7 +75,7 @@ export default function TenantDetailsPage({ params }: TenantDetailsPageProps) {
       setTenantModules(tenantModulesData);
     } catch (err: any) {
       console.error('[TenantDetails] Error loading data:', err);
-      setError('Error al cargar la información completa del cliente.');
+      setError(err?.message || 'Error al cargar la información completa del cliente.');
     } finally {
       setLoading(false);
     }

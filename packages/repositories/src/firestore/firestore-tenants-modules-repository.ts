@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   query,
 } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@terabound/firebase-client';
 import type { TenantModule } from '@terabound/domain';
 import type { TenantsModulesRepository } from '../contracts/tenants-modules-repository';
 
@@ -18,7 +19,7 @@ export class FirestoreTenantsModulesRepository implements TenantsModulesReposito
   }
 
   async list(tenantId: string): Promise<TenantModule[]> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const q = query(collection(db, this.getCollectionPath(tenantId)));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
@@ -28,7 +29,7 @@ export class FirestoreTenantsModulesRepository implements TenantsModulesReposito
   }
 
   async getByModuleId(tenantId: string, moduleId: string): Promise<TenantModule | null> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const docRef = doc(db, this.getCollectionPath(tenantId), moduleId);
     const snapshot = await getDoc(docRef);
     if (!snapshot.exists()) return null;
@@ -36,7 +37,7 @@ export class FirestoreTenantsModulesRepository implements TenantsModulesReposito
   }
 
   async upsert(tenantId: string, data: Omit<TenantModule, 'updatedAt' | 'updatedBy'>): Promise<void> {
-    const db = getFirestore();
+    const db = getFirebaseFirestore();
     const docRef = doc(db, this.getCollectionPath(tenantId), data.moduleId);
     await setDoc(docRef, {
       ...data,

@@ -35,11 +35,14 @@ export class FirestoreModulesRepository implements ModulesRepository {
     if (filters?.status) constraints.push(where('status', '==', filters.status));
     if (filters?.category) constraints.push(where('category', '==', filters.category));
     if (filters?.visibility) constraints.push(where('visibility', '==', filters.visibility));
-    constraints.push(orderBy('sortOrder', 'asc'));
+    // constraints.push(orderBy('sortOrder', 'asc')); // Deshabilitado para evitar index requirements por ahora
 
     const q = query(this.col, ...constraints);
     const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...this.mapFromFirestore(d.data()) }));
+    const modules = snap.docs.map((d) => ({ id: d.id, ...this.mapFromFirestore(d.data()) }));
+    
+    // In-memory sorting as fallback
+    return modules.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
   async create(input: Omit<ModuleDefinition, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
