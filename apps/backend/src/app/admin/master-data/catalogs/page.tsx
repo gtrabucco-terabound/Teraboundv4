@@ -434,34 +434,34 @@ export default function MasterDataPage() {
           />
 
           <div className="relative w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
-            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+            <div className="p-5 border-b border-surface-800 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-display font-bold text-surface-50">
+                <h3 className="text-lg font-display font-bold text-surface-50">
                   {catalogForm.id ? 'Editar Catálogo' : 'Crear Catálogo'}
                 </h3>
-                <p className="text-sm text-surface-400 mt-1">
+                <p className="text-[11px] text-surface-500 mt-0.5">
                   Define las propiedades globales del catálogo maestro.
                 </p>
               </div>
               <button
                 onClick={() => setIsCatalogDrawerOpen(false)}
-                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-surface-800 rounded-lg transition-colors"
               >
-                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+                <Plus className="w-5 h-5 text-surface-400 rotate-45" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCatalog} className="flex flex-col flex-1">
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
+            <form onSubmit={handleSaveCatalog} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                       Identificador (Key)
                     </label>
                     <input
                       type="text"
                       disabled={!!catalogForm.id}
-                      className="input font-mono"
+                      className="input font-mono text-sm py-2"
                       placeholder="ej: billing-status"
                       value={catalogForm.key}
                       onChange={(e) => setCatalogForm({ ...catalogForm, key: e.target.value.toLowerCase().replace(/\s/g, '_') })}
@@ -469,13 +469,13 @@ export default function MasterDataPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                       Nombre Público
                     </label>
                     <input
                       type="text"
-                      className="input"
+                      className="input text-sm py-2"
                       placeholder="ej: Estados de Facturación"
                       value={catalogForm.name}
                       onChange={(e) => setCatalogForm({ ...catalogForm, name: e.target.value })}
@@ -483,12 +483,12 @@ export default function MasterDataPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                       Descripción
                     </label>
                     <textarea
-                      className="input min-h-[100px] py-3 text-sm"
+                      className="input min-h-[80px] py-2 text-sm"
                       placeholder="Describe el propósito de este catálogo..."
                       value={catalogForm.description}
                       onChange={(e) => setCatalogForm({ ...catalogForm, description: e.target.value })}
@@ -496,12 +496,12 @@ export default function MasterDataPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Scope
                       </label>
                       <select
-                        className="input appearance-none bg-surface-950"
+                        className="input h-10 appearance-none bg-surface-950 text-sm"
                         value={catalogForm.scope}
                         onChange={(e) =>
                           setCatalogForm({ ...catalogForm, scope: e.target.value as any })
@@ -512,12 +512,12 @@ export default function MasterDataPage() {
                       </select>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Estado
                       </label>
                       <select
-                        className="input appearance-none bg-surface-950"
+                        className="input h-10 appearance-none bg-surface-950 text-sm"
                         value={catalogForm.active ? 'active' : 'inactive'}
                         onChange={(e) =>
                           setCatalogForm({
@@ -532,7 +532,7 @@ export default function MasterDataPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-surface-950/50 border border-surface-800 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-surface-950/50 border border-surface-800 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-bold text-surface-100">Permitir Overrides</p>
                       <p className="text-[10px] text-surface-500">
@@ -555,17 +555,17 @@ export default function MasterDataPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <div className="p-5 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={() => setIsCatalogDrawerOpen(false)}
-                  className="btn-secondary py-3"
+                  className="btn-secondary py-2.5 text-sm"
                 >
                   Cancelar
                 </button>
 
-                <button type="submit" className="btn-primary py-3">
-                  {catalogForm.id ? 'Actualizar Catálogo' : 'Crear Catálogo'}
+                <button type="submit" className="btn-primary py-2.5 text-sm">
+                  {catalogForm.id ? 'Actualizar' : 'Crear Catálogo'}
                 </button>
               </div>
             </form>
@@ -582,34 +582,34 @@ export default function MasterDataPage() {
           />
 
           <div className="relative w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
-            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+            <div className="p-5 border-b border-surface-800 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-display font-bold text-surface-50">
+                <h3 className="text-lg font-display font-bold text-surface-50">
                   {itemForm.id ? 'Editar Item' : 'Crear Item'}
                 </h3>
-                <p className="text-sm text-surface-400 mt-1">
-                  Define un valor normalizado para el catálogo {selectedCatalog?.name}.
+                <p className="text-[11px] text-surface-500 mt-0.5">
+                  Catálogo: {selectedCatalog?.name}
                 </p>
               </div>
               <button
                 onClick={() => setIsItemDrawerOpen(false)}
-                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-surface-800 rounded-lg transition-colors"
               >
-                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+                <Plus className="w-5 h-5 text-surface-400 rotate-45" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveItem} className="flex flex-col flex-1">
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="space-y-4">
+            <form onSubmit={handleSaveItem} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+                <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Llave (Key)
                       </label>
                       <input
                         type="text"
-                        className="input font-mono"
+                        className="input font-mono text-sm py-2"
                         placeholder="ej: PENDING"
                         value={itemForm.key}
                         onChange={(e) => setItemForm({ ...itemForm, key: e.target.value.toUpperCase() })}
@@ -617,13 +617,13 @@ export default function MasterDataPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Valor Funcional
                       </label>
                       <input
                         type="text"
-                        className="input"
+                        className="input text-sm py-2"
                         placeholder="ej: pen"
                         value={itemForm.value}
                         onChange={(e) => setItemForm({ ...itemForm, value: e.target.value })}
@@ -632,13 +632,13 @@ export default function MasterDataPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                       Etiqueta Visible (Label)
                     </label>
                     <input
                       type="text"
-                      className="input"
+                      className="input text-sm py-2"
                       placeholder="ej: Pendiente de Pago"
                       value={itemForm.label}
                       onChange={(e) => setItemForm({ ...itemForm, label: e.target.value })}
@@ -647,13 +647,13 @@ export default function MasterDataPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Orden
                       </label>
                       <input
                         type="number"
-                        className="input"
+                        className="input text-sm py-2"
                         value={itemForm.sortOrder}
                         onChange={(e) =>
                           setItemForm({
@@ -664,12 +664,12 @@ export default function MasterDataPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Estado
                       </label>
                       <select
-                        className="input appearance-none bg-surface-950"
+                        className="input h-10 appearance-none bg-surface-950 text-sm"
                         value={itemForm.active ? 'active' : 'inactive'}
                         onChange={(e) =>
                           setItemForm({
@@ -684,15 +684,15 @@ export default function MasterDataPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
                         Metadata JSON
                       </label>
-                      <Info className="w-3 h-3 text-surface-600" />
+                      <Info className="w-3.5 h-3.5 text-surface-600" />
                     </div>
                     <textarea
-                      className="input min-h-[150px] font-mono text-xs py-3"
+                      className="input min-h-[120px] font-mono text-[11px] py-2"
                       placeholder='{ "color": "#ff0000", "icon": "clock" }'
                       value={JSON.stringify(itemForm.metadata ?? {}, null, 2)}
                       onChange={(e) => {
@@ -708,17 +708,17 @@ export default function MasterDataPage() {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <div className="p-5 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={() => setIsItemDrawerOpen(false)}
-                  className="btn-secondary py-3"
+                  className="btn-secondary py-2.5 text-sm"
                 >
                   Cancelar
                 </button>
 
-                <button type="submit" className="btn-primary py-3">
-                  {itemForm.id ? 'Actualizar Item' : 'Crear Item'}
+                <button type="submit" className="btn-primary py-2.5 text-sm">
+                  {itemForm.id ? 'Actualizar' : 'Crear Item'}
                 </button>
               </div>
             </form>
