@@ -10,7 +10,9 @@ export interface RoleDefinition {
   key: string;
   name: string;
   description?: string;
+  scope: 'platform' | 'tenant'; // GAP 3: Separación estricta
   isSystem: boolean;
+
   inherits?: string[];
   permissions: string[];
   scopes: Record<string, PermissionScope>;

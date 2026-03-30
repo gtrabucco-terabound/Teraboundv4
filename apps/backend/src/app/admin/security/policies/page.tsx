@@ -15,7 +15,7 @@ import {
   ToggleRight,
   ToggleLeft
 } from 'lucide-react';
-import { FirestoreSecurityPoliciesRepository } from '@terabound/repositories';
+import { FirestoreSecurityPoliciesRepository, seedSecurityPolicies } from '@terabound/repositories';
 import type { SecurityPolicy } from '@terabound/domain';
 
 export default function PoliciesPage() {
@@ -27,7 +27,11 @@ export default function PoliciesPage() {
   const repo = new FirestoreSecurityPoliciesRepository();
 
   useEffect(() => {
-    loadPolicies();
+    const init = async () => {
+      await seedSecurityPolicies(); // GAP 4: Seed si está vacío
+      await loadPolicies();
+    };
+    init();
   }, []);
 
   const loadPolicies = async () => {
@@ -42,6 +46,7 @@ export default function PoliciesPage() {
       setLoading(false);
     }
   };
+
 
   const handleToggle = (key: string) => {
     setPolicies(policies.map(p => 

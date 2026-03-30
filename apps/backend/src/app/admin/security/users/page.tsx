@@ -12,7 +12,9 @@ import {
   MoreVertical,
   Mail,
   Calendar,
-  Key
+  Key,
+  Users,
+  Plus
 } from 'lucide-react';
 import { FirestoreUsersRepository } from '@terabound/repositories';
 import { UserStatus, GlobalType } from '@terabound/domain';
@@ -31,6 +33,16 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // GAP 1: Estados para creación
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    displayName: '',
+    globalType: 'readonly_auditor',
+    status: 'active',
+  });
+
   const repo = new FirestoreUsersRepository();
 
   useEffect(() => {
@@ -44,52 +56,78 @@ export default function UsersPage() {
       setUsers(data);
     } catch (err: any) {
       console.error('[Users] Error:', err);
-      setError('Error al cargar la lista de usuarios globales.');
+      setError('Error al cargar el listado de usuarios de plataforma.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleStatus = async (user: UserRecord) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.BLOCKED : UserStatus.ACTIVE;
-      await repo.update(user.userId, { status: newStatus });
+      setIsSaving(true);
+      await repo.create({
+        ...formData,
+        metadata: {},
+        preferences: {},
+        lastLoginAt: new Date(),
+      } as any);
+      setIsDrawerOpen(false);
+      setFormData({ email: '', displayName: '', globalType: 'readonly_auditor', status: 'active' });
       await loadUsers();
     } catch (err) {
-      alert('Error al cambiar el estado del usuario.');
+      alert('Error al crear usuario: ' + (err as Error).message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.userId.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      await repo.update(id, { status: newStatus as any });
+      await loadUsers();
+    } catch (err) {
+      alert('Error al cambiar estado.');
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
         <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
-        <p className="text-surface-400 text-sm animate-pulse">Cargando directorio de identidad global...</p>
+        <p className="text-surface-400 text-sm animate-pulse">Sincronizando identidades de plataforma...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="section-title flex items-center gap-3">
             <div className="p-2 rounded-lg bg-brand-500/10 border border-brand-500/20">
-              <Shield className="w-5 h-5 text-brand-400" />
+              <Users className="w-5 h-5 text-brand-400" />
             </div>
             Gestión de Usuarios
           </h1>
           <p className="section-subtitle mt-2">
-            Administración de identidades globales, control de acceso y auditoría de perfiles.
+            Administración de cuentas de plataforma, operadores de soporte y auditores.
           </p>
         </div>
+        <button 
+          onClick={() => setIsDrawerOpen(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo Usuario
+        </button>
       </div>
 
       {/* Toolbar */}
@@ -199,6 +237,99 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
+      {/* Users Table */}
+      {/* ... (asumo que se mantiene el listado) */}
+
+      {/* Drawer Overlay - Nuevo Usuario */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-50">Crear Usuario de Plataforma</h2>
+                <p className="text-sm text-surface-400 mt-1">Alta de perfiles administrativos y de soporte.</p>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Nombre Completo</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="Ej: Juan Pérez"
+                    className="input"
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Correo Electrónico</label>
+                  <input 
+                    required
+                    type="email" 
+                    placeholder="juan.perez@terabound.com"
+                    className="input"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Tipo de Usuario (Plataforma)</label>
+                  <select 
+                    className="input appearance-none bg-surface-950"
+                    value={formData.globalType}
+                    onChange={(e) => setFormData({ ...formData, globalType: e.target.value })}
+                  >
+                    <option value="platform_admin">Platform Admin (Superuser)</option>
+                    <option value="security_admin">Security Admin</option>
+                    <option value="support_operator">Support Operator</option>
+                    <option value="readonly_auditor">Read-Only Auditor</option>
+                  </select>
+                  <p className="text-[10px] text-surface-600 italic">Nota: Los usuarios operativos (tenant_user) se crean desde las apps de cliente.</p>
+                </div>
+              </div>
+            </form>
+
+            <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="btn-secondary py-3"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                onClick={handleCreateUser}
+                disabled={isSaving || !formData.email || !formData.displayName}
+                className="btn-primary py-3"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Creando Usuario...
+                  </>
+                ) : 'Crear Usuario'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -1,21 +1,26 @@
 import { 
+  getFirebaseFirestore, 
+} from '@terabound/firebase-client';
+import { 
   collection, 
+  collectionGroup, 
+  query, 
+  where, 
   getDocs, 
-  doc, 
   getDoc, 
+  doc, 
   addDoc, 
   updateDoc, 
-  deleteDoc,
-  serverTimestamp,
-  query,
-  where,
-  collectionGroup
+  deleteDoc, 
+  serverTimestamp 
 } from 'firebase/firestore';
-import { getFirebaseFirestore } from '@terabound/firebase-client';
+import { FirestoreAuditRepository } from './firestore-audit-repository';
+import { MembershipStatus } from '@terabound/domain';
 import type { Membership } from '@terabound/domain';
 import type { MembershipsRepository } from '../contracts/security-repositories';
 
 export class FirestoreMembershipsRepository implements MembershipsRepository {
+  private audit = new FirestoreAuditRepository();
   
   async listByTenant(tenantId: string): Promise<Membership[]> {
     const db = getFirebaseFirestore();
@@ -69,8 +74,57 @@ export class FirestoreMembershipsRepository implements MembershipsRepository {
   }
 
   async delete(tenantId: string, membershipId: string): Promise<void> {
-    const db = getFirebaseFirestore();
-    const docRef = doc(db, 'tenants', tenantId, 'members', membershipId);
-    await deleteDoc(docRef);
+    try {
+      const db = getFirebaseFirestore();
+      const docRef = doc(db, `tenants/${tenantId}/members`, membershipId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('[FirestoreMembershipsRepository] Delete error:', error);
+      throw error;
+    }
+  }
+
+  async revoke(tenantId: string, membershipId: string): Promise<void> {
+    try {
+      const db = getFirebaseFirestore();
+      const docRef = doc(db, `tenants/${tenantId}/members`, membershipId);
+      await updateDoc(docRef, {
+        status: MembershipStatus.REVOKED,
+        updatedAt: serverTimestamp()
+      });
+
+      await this.audit.logTenant(tenantId, {
+        eventType: 'MembershipRevoked',
+        entityType: 'Membership',
+        entityId: membershipId,
+        actorUserId: 'system-admin',
+        moduleId: 'security'
+      });
+    } catch (error) {
+      console.error('[FirestoreMembershipsRepository] Revoke error:', error);
+      throw error;
+    }
+  }
+
+  async changeRole(tenantId: string, membershipId: string, roleId: string): Promise<void> {
+    try {
+      const db = getFirebaseFirestore();
+      const docRef = doc(db, `tenants/${tenantId}/members`, membershipId);
+      await updateDoc(docRef, {
+        roleId,
+        updatedAt: serverTimestamp()
+      });
+
+      await this.audit.logTenant(tenantId, {
+        eventType: 'MembershipUpdated',
+        entityType: 'Membership',
+        entityId: membershipId,
+        actorUserId: 'system-admin',
+        payload: { newRole: roleId }
+      });
+    } catch (error) {
+      console.error('[FirestoreMembershipsRepository] ChangeRole error:', error);
+      throw error;
+    }
   }
 }

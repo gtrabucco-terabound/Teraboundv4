@@ -13,8 +13,11 @@ export interface MembershipsRepository {
   getById(tenantId: string, membershipId: string): Promise<Membership | null>;
   create(tenantId: string, membership: Omit<Membership, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<string>;
   update(tenantId: string, membershipId: string, data: Partial<Membership>): Promise<void>;
+  revoke(tenantId: string, membershipId: string): Promise<void>; // GAP 2
+  changeRole(tenantId: string, membershipId: string, roleId: string): Promise<void>; // GAP 2
   delete(tenantId: string, membershipId: string): Promise<void>;
 }
+
 
 export interface RolesRepository {
   listGlobal(): Promise<RoleDefinition[]>;
@@ -22,7 +25,9 @@ export interface RolesRepository {
   getById(id: string, tenantId?: string): Promise<RoleDefinition | null>;
   create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, tenantId?: string): Promise<string>;
   update(id: string, data: Partial<RoleDefinition>, tenantId?: string): Promise<void>;
+  delete(id: string, tenantId?: string): Promise<void>;
 }
+
 
 export interface SecurityPoliciesRepository {
   list(): Promise<SecurityPolicy[]>;

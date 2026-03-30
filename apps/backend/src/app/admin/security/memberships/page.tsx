@@ -64,11 +64,33 @@ export default function MembershipsPage() {
     }
   };
 
+  const handleRevoke = async (tenantId: string, membershipId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas revocar este acceso?')) return;
+    try {
+      await mRepo.revoke(tenantId, membershipId);
+      await loadData();
+    } catch (err) {
+      alert('Error al revocar acceso.');
+    }
+  };
+
+  const handleChangeRole = async (tenantId: string, membershipId: string, currentRole: string) => {
+    const newRole = window.prompt('Ingrese el nuevo Rol ID:', currentRole);
+    if (!newRole || newRole === currentRole) return;
+    try {
+      await mRepo.changeRole(tenantId, membershipId, newRole);
+      await loadData();
+    } catch (err) {
+      alert('Error al cambiar rol.');
+    }
+  };
+
   const filteredMembers = memberships.filter(m => 
     m.userId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (m as any).tenantId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tenants[(m as any).tenantId]?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
 
   if (loading) {
     return (
@@ -153,7 +175,7 @@ export default function MembershipsPage() {
 
                   <div className="grid grid-cols-2 gap-4 text-[10px]">
                     <div className="space-y-1">
-                       <span className="text-surface-600 font-bold uppercase">Rol ID</span>
+                       <span className="text-surface-600 font-bold uppercase hover:text-brand-400 cursor-pointer" onClick={() => handleChangeRole(tenantId, m.id!, m.roleId)}>Rol ID</span>
                        <p className="text-surface-300 font-medium truncate">{m.roleId}</p>
                     </div>
                     <div className="space-y-1">
@@ -169,10 +191,15 @@ export default function MembershipsPage() {
                 </div>
 
                 <div className="p-2 bg-surface-950/30 border-t border-surface-800/40 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-red-400 transition-colors" title="Revocar Acceso">
+                   <button 
+                     onClick={() => handleRevoke(tenantId, m.id!)}
+                     className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-red-400 transition-colors" 
+                     title="Revocar Acceso"
+                   >
                       <Trash2 className="w-3.5 h-3.5" />
                    </button>
                 </div>
+
               </div>
             );
           })

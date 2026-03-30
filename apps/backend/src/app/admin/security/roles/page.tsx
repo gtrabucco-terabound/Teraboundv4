@@ -49,6 +49,7 @@ export default function RolesPage() {
     name: '',
     key: '',
     description: '',
+    scope: 'platform' as 'platform' | 'tenant', // GAP 3
     isSystem: false,
     active: true,
   });
@@ -83,15 +84,22 @@ export default function RolesPage() {
     try {
       setIsSaving(true);
       await repo.create({
-        ...formData,
+        name: formData.name,
+        key: formData.key,
+        description: formData.description,
+        scope: formData.scope,
+        isSystem: formData.isSystem,
+        active: true, // Campo requerido por RoleDefinition
         permissions: [],
         scopes: {},
       });
+
       setIsDrawerOpen(false);
       setFormData({
         name: '',
         key: '',
         description: '',
+        scope: 'platform',
         isSystem: false,
         active: true,
       });
@@ -103,6 +111,7 @@ export default function RolesPage() {
       setIsSaving(false);
     }
   };
+
 
   const handleTogglePermission = (permissionKey: string) => {
     if (!selectedRole) return;
@@ -336,6 +345,17 @@ export default function RolesPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Alcance (Scope)</label>
+                  <select 
+                    className="input appearance-none bg-surface-950"
+                    value={formData.scope}
+                    onChange={(e) => setFormData({ ...formData, scope: e.target.value as any })}
+                  >
+                    <option value="platform">Plataforma (Global)</option>
+                    <option value="tenant">Tenant (Específico)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-surface-500 uppercase">Descripción</label>
                   <textarea 
                     rows={4}
@@ -345,6 +365,7 @@ export default function RolesPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
+
               </div>
             </form>
 

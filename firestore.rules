@@ -31,10 +31,11 @@ service cloud.firestore {
     // Users: lectura propia + PlatformAdmin; escritura PlatformAdmin
     match /users/{userId} {
       allow read: if isOwnProfile(userId) || isPlatformAdmin();
-      allow create: if isPlatformAdmin();
+      allow create: if isPlatformAdmin() && request.resource.data.globalType != 'tenant_user';
       allow update: if isPlatformAdmin() && preserveImmutableFields();
       allow delete: if false;
     }
+
 
     // Platform Config: solo PlatformAdmin
     match /_gl_platform_config/{configId} {
@@ -64,10 +65,16 @@ service cloud.firestore {
       allow write: if isPlatformAdmin();
     }
 
+    // Roles: solo PlatformAdmin (Gap 3)
+    match /_gl_roles/{roleId} {
+      allow read, write: if isPlatformAdmin();
+    }
+
     // Security Policies: solo PlatformAdmin
     match /_gl_security_policies/{policyId} {
       allow read, write: if isPlatformAdmin();
     }
+
 
     // Navigation: lectura autenticados; escritura PlatformAdmin
     match /_gl_navigation/{navId} {
@@ -112,11 +119,11 @@ service cloud.firestore {
       allow write: if isPlatformAdmin();
     }
 
-    // Audit Log: lectura autorizados; escritura solo functions
+    // Audit Log: lectura autorizados; escritura PlatformAdmin (Gap 5)
     match /_gl_audit_log/{eventId} {
-      allow read: if isPlatformAdmin();
-      allow write: if false; // Solo Cloud Functions
+      allow read, write: if isPlatformAdmin();
     }
+
 
     match /_gl_event_catalog/{eventType} {
       allow read: if isAuthenticated();
@@ -189,11 +196,12 @@ service cloud.firestore {
         allow write: if isPlatformAdmin();
       }
 
-      // Event Log
+      // Event Log: escritura PlatformAdmin
       match /_tn_event_log/{eventId} {
         allow read: if hasTenantMembership(tenantId) || isPlatformAdmin();
-        allow write: if false; // Solo Cloud Functions
+        allow write: if isPlatformAdmin();
       }
     }
+
   }
 }

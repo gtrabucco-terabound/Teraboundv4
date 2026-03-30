@@ -25,3 +25,5 @@ export * from './firestore/firestore-users-repository';
 export * from './firestore/firestore-memberships-repository';
 export * from './firestore/firestore-roles-repository';
 export * from './firestore/firestore-policies-repository';
+export * from './seed/security-seed';
+
