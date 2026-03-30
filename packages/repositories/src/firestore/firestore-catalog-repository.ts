@@ -84,9 +84,13 @@ export class FirestoreCatalogItemsRepository implements CatalogItemsRepository {
   }
 
   async listByCatalog(catalogId: string): Promise<CatalogItem[]> {
-    const q = query(this.col, where('catalogId', '==', catalogId), orderBy('sortOrder', 'asc'));
+    // Eliminamos el orderBy a nivel de consulta para evitar requerir índices compuestos manuales.
+    // Ordenamos en memoria para garantizar que los ítems sean visibles de inmediato.
+    const q = query(this.col, where('catalogId', '==', catalogId));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...this.mapItem(d.data()) }));
+    const items = snap.docs.map(d => ({ id: d.id, ...this.mapItem(d.data()) })) as CatalogItem[];
+    
+    return items.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
   async getById(id: string): Promise<CatalogItem | null> {

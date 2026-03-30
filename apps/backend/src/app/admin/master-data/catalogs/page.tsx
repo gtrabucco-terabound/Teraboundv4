@@ -96,6 +96,7 @@ export default function MasterDataPage() {
       setItems(data);
     } catch (err) {
       console.error('Error loading items:', err);
+      // alert('Error al cargar ítems. Posiblemente falte un índice en Firestore.');
     } finally {
       setItemsLoading(false);
     }
@@ -169,10 +170,10 @@ export default function MasterDataPage() {
   return (
     <div className="flex h-[calc(100vh-64px)] bg-surface-bg overflow-hidden animate-fade-in-up">
       {/* --- Sidebar Izquierda: Lista de Catálogos --- */}
-      <aside className="w-80 border-r border-surface-800 bg-surface-bg/50 backdrop-blur-md flex flex-col">
+      <aside className="w-80 border-r border-surface-800 bg-surface-bg flex flex-col">
         <div className="p-6 border-b border-surface-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-black text-surface-200 uppercase tracking-widest flex items-center gap-2">
+            <h2 className="text-[11px] font-bold text-surface-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Database className="w-4 h-4 text-brand-400" />
               Catálogos
             </h2>
@@ -189,7 +190,7 @@ export default function MasterDataPage() {
                 });
                 setIsCatalogDrawerOpen(true);
               }}
-              className="p-1.5 rounded-lg bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 transition-all"
+              className="p-1.5 rounded-lg bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 transition-all border border-brand-500/20"
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -207,7 +208,7 @@ export default function MasterDataPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar bg-surface-950/20">
           {loading ? (
             <div className="flex items-center justify-center h-20">
               <Loader2 className="w-5 h-5 text-surface-600 animate-spin" />
@@ -218,12 +219,12 @@ export default function MasterDataPage() {
                 key={c.id}
                 onClick={() => setSelectedCatalog(c)}
                 className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border ${selectedCatalog?.id === c.id
-                    ? 'bg-brand-500/10 border-brand-500/30 text-brand-400 ring-1 ring-brand-500/20'
-                    : 'bg-transparent border-transparent text-surface-400 hover:bg-surface-800/50 hover:text-surface-100'
+                  ? 'bg-brand-500/10 border-brand-500/30 text-brand-400 ring-1 ring-brand-500/20 shadow-[0_0_20px_rgba(51,141,255,0.05)]'
+                  : 'bg-transparent border-transparent text-surface-400 hover:bg-surface-800/40 hover:text-surface-100'
                   }`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold truncate">{c.name}</p>
+                  <p className="text-[13px] font-bold truncate tracking-tight">{c.name}</p>
                   <p className="text-[10px] opacity-60 font-mono truncate">{c.key}</p>
                 </div>
 
@@ -234,7 +235,7 @@ export default function MasterDataPage() {
                       setCatalogForm(c);
                       setIsCatalogDrawerOpen(true);
                     }}
-                    className="p-1 rounded hover:bg-surface-700 text-surface-400 hover:text-surface-100"
+                    className="p-1.5 rounded-lg hover:bg-surface-700 text-surface-400 hover:text-surface-100 transition-colors"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -428,133 +429,143 @@ export default function MasterDataPage() {
       {isCatalogDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
-            className="absolute inset-0 bg-surface-bg/80 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-surface-950/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsCatalogDrawerOpen(false)}
           />
 
-          <div className="relative w-[450px] bg-surface-card border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
-            <div className="p-8 border-b border-surface-800">
-              <h3 className="text-xl font-display font-black text-surface-100 flex items-center gap-3">
-                {catalogForm.id ? 'Editar Catálogo' : 'Nuevo Catálogo'}
-              </h3>
-              <p className="text-xs text-surface-500 mt-2">
-                Define las propiedades globales del catálogo maestro.
-              </p>
+          <div className="relative w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-display font-bold text-surface-50">
+                  {catalogForm.id ? 'Editar Catálogo' : 'Crear Catálogo'}
+                </h3>
+                <p className="text-sm text-surface-400 mt-1">
+                  Define las propiedades globales del catálogo maestro.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCatalogDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
             </div>
 
             <form onSubmit={handleSaveCatalog} className="flex flex-col flex-1">
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                    Identificador (Key)
-                  </label>
-                  <input
-                    type="text"
-                    disabled={!!catalogForm.id}
-                    className="input"
-                    placeholder="ej: billing-status"
-                    value={catalogForm.key}
-                    onChange={(e) => setCatalogForm({ ...catalogForm, key: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                    Nombre Público
-                  </label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="ej: Estados de Facturación"
-                    value={catalogForm.name}
-                    onChange={(e) => setCatalogForm({ ...catalogForm, name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                    Descripción
-                  </label>
-                  <textarea
-                    className="input min-h-[100px] py-3"
-                    placeholder="Describe el propósito de este catálogo..."
-                    value={catalogForm.description}
-                    onChange={(e) => setCatalogForm({ ...catalogForm, description: e.target.value })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Scope
+                      Identificador (Key)
                     </label>
-                    <select
-                      className="input appearance-none bg-surface-950"
-                      value={catalogForm.scope}
-                      onChange={(e) =>
-                        setCatalogForm({ ...catalogForm, scope: e.target.value as any })
-                      }
-                    >
-                      <option value="global">Global</option>
-                      <option value="tenant">Tenant</option>
-                    </select>
+                    <input
+                      type="text"
+                      disabled={!!catalogForm.id}
+                      className="input font-mono"
+                      placeholder="ej: billing-status"
+                      value={catalogForm.key}
+                      onChange={(e) => setCatalogForm({ ...catalogForm, key: e.target.value.toLowerCase().replace(/\s/g, '_') })}
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Estado
+                      Nombre Público
                     </label>
-                    <select
-                      className="input appearance-none bg-surface-950"
-                      value={catalogForm.active ? 'active' : 'inactive'}
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="ej: Estados de Facturación"
+                      value={catalogForm.name}
+                      onChange={(e) => setCatalogForm({ ...catalogForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                      Descripción
+                    </label>
+                    <textarea
+                      className="input min-h-[100px] py-3 text-sm"
+                      placeholder="Describe el propósito de este catálogo..."
+                      value={catalogForm.description}
+                      onChange={(e) => setCatalogForm({ ...catalogForm, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Scope
+                      </label>
+                      <select
+                        className="input appearance-none bg-surface-950"
+                        value={catalogForm.scope}
+                        onChange={(e) =>
+                          setCatalogForm({ ...catalogForm, scope: e.target.value as any })
+                        }
+                      >
+                        <option value="global">Global</option>
+                        <option value="tenant">Tenant</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Estado
+                      </label>
+                      <select
+                        className="input appearance-none bg-surface-950"
+                        value={catalogForm.active ? 'active' : 'inactive'}
+                        onChange={(e) =>
+                          setCatalogForm({
+                            ...catalogForm,
+                            active: e.target.value === 'active',
+                          })
+                        }
+                      >
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-surface-950/50 border border-surface-800 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-surface-100">Permitir Overrides</p>
+                      <p className="text-[10px] text-surface-500">
+                        ¿Pueden los tenants extender este catálogo?
+                      </p>
+                    </div>
+
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-brand-500 rounded bg-surface-800 border-surface-700"
+                      checked={catalogForm.isOverridable}
                       onChange={(e) =>
                         setCatalogForm({
                           ...catalogForm,
-                          active: e.target.value === 'active',
+                          isOverridable: e.target.checked,
                         })
                       }
-                    >
-                      <option value="active">Activo</option>
-                      <option value="inactive">Inactivo</option>
-                    </select>
+                    />
                   </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-surface-950 border border-surface-800 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-surface-100">Permitir Overrides</p>
-                    <p className="text-[10px] text-surface-500">
-                      ¿Pueden los tenants extender este catálogo?
-                    </p>
-                  </div>
-
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 accent-brand-500"
-                    checked={catalogForm.isOverridable}
-                    onChange={(e) =>
-                      setCatalogForm({
-                        ...catalogForm,
-                        isOverridable: e.target.checked,
-                      })
-                    }
-                  />
                 </div>
               </div>
 
-              <div className="p-8 border-t border-surface-800 flex items-center gap-3">
+              <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={() => setIsCatalogDrawerOpen(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary py-3"
                 >
                   Cancelar
                 </button>
 
-                <button type="submit" className="btn-primary flex-1">
-                  Guardar Catálogo
+                <button type="submit" className="btn-primary py-3">
+                  {catalogForm.id ? 'Actualizar Catálogo' : 'Crear Catálogo'}
                 </button>
               </div>
             </form>
@@ -566,139 +577,148 @@ export default function MasterDataPage() {
       {isItemDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
-            className="absolute inset-0 bg-surface-bg/80 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-surface-950/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsItemDrawerOpen(false)}
           />
 
-          <div className="relative w-[450px] bg-surface-card border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
-            <div className="p-8 border-b border-surface-800">
-              <h3 className="text-xl font-display font-black text-surface-100 flex items-center gap-3">
-                {itemForm.id ? 'Editar Item' : 'Nuevo Item'}
-              </h3>
-              <p className="text-xs text-surface-500 mt-2">
-                Define un valor normalizado para el catálogo {selectedCatalog?.name}.
-              </p>
+          <div className="relative w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-display font-bold text-surface-50">
+                  {itemForm.id ? 'Editar Item' : 'Crear Item'}
+                </h3>
+                <p className="text-sm text-surface-400 mt-1">
+                  Define un valor normalizado para el catálogo {selectedCatalog?.name}.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsItemDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
             </div>
 
             <form onSubmit={handleSaveItem} className="flex flex-col flex-1">
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Llave (Key)
+                      </label>
+                      <input
+                        type="text"
+                        className="input font-mono"
+                        placeholder="ej: PENDING"
+                        value={itemForm.key}
+                        onChange={(e) => setItemForm({ ...itemForm, key: e.target.value.toUpperCase() })}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Valor Funcional
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="ej: pen"
+                        value={itemForm.value}
+                        onChange={(e) => setItemForm({ ...itemForm, value: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Llave (Key)
+                      Etiqueta Visible (Label)
                     </label>
                     <input
                       type="text"
                       className="input"
-                      placeholder="ej: PENDING"
-                      value={itemForm.key}
-                      onChange={(e) => setItemForm({ ...itemForm, key: e.target.value })}
+                      placeholder="ej: Pendiente de Pago"
+                      value={itemForm.label}
+                      onChange={(e) => setItemForm({ ...itemForm, label: e.target.value })}
                       required
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Orden
+                      </label>
+                      <input
+                        type="number"
+                        className="input"
+                        value={itemForm.sortOrder}
+                        onChange={(e) =>
+                          setItemForm({
+                            ...itemForm,
+                            sortOrder: parseInt(e.target.value || '0', 10),
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Estado
+                      </label>
+                      <select
+                        className="input appearance-none bg-surface-950"
+                        value={itemForm.active ? 'active' : 'inactive'}
+                        onChange={(e) =>
+                          setItemForm({
+                            ...itemForm,
+                            active: e.target.value === 'active',
+                          })
+                        }
+                      >
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Valor Funcional
-                    </label>
-                    <input
-                      type="text"
-                      className="input"
-                      placeholder="ej: pen"
-                      value={itemForm.value}
-                      onChange={(e) => setItemForm({ ...itemForm, value: e.target.value })}
-                      required
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                        Metadata JSON
+                      </label>
+                      <Info className="w-3 h-3 text-surface-600" />
+                    </div>
+                    <textarea
+                      className="input min-h-[150px] font-mono text-xs py-3"
+                      placeholder='{ "color": "#ff0000", "icon": "clock" }'
+                      value={JSON.stringify(itemForm.metadata ?? {}, null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value);
+                          setItemForm({ ...itemForm, metadata: parsed });
+                        } catch {
+                          // Soft-fail while typing
+                        }
+                      }}
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                    Etiqueta Visible (Label)
-                  </label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="ej: Pendiente de Pago"
-                    value={itemForm.label}
-                    onChange={(e) => setItemForm({ ...itemForm, label: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Orden
-                    </label>
-                    <input
-                      type="number"
-                      className="input"
-                      value={itemForm.sortOrder}
-                      onChange={(e) =>
-                        setItemForm({
-                          ...itemForm,
-                          sortOrder: parseInt(e.target.value || '0', 10),
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                      Estado
-                    </label>
-                    <select
-                      className="input appearance-none bg-surface-950"
-                      value={itemForm.active ? 'active' : 'inactive'}
-                      onChange={(e) =>
-                        setItemForm({
-                          ...itemForm,
-                          active: e.target.value === 'active',
-                        })
-                      }
-                    >
-                      <option value="active">Activo</option>
-                      <option value="inactive">Inactivo</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
-                    Metadata JSON
-                  </label>
-                  <textarea
-                    className="input min-h-[150px] font-mono text-[10px] py-3"
-                    placeholder='{ "color": "#ff0000", "icon": "clock" }'
-                    value={JSON.stringify(itemForm.metadata ?? {}, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        setItemForm({ ...itemForm, metadata: parsed });
-                      } catch {
-                        // Soft-fail while typing invalid JSON
-                      }
-                    }}
-                  />
-                  <p className="text-[9px] text-surface-600 flex items-center gap-2 mt-1">
-                    <Info className="w-3 h-3" />
-                    Debe ser un formato JSON válido para persistir.
-                  </p>
                 </div>
               </div>
 
-              <div className="p-8 border-t border-surface-800 flex items-center gap-3">
+              <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={() => setIsItemDrawerOpen(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary py-3"
                 >
                   Cancelar
                 </button>
 
-                <button type="submit" className="btn-primary flex-1">
-                  Guardar Item
+                <button type="submit" className="btn-primary py-3">
+                  {itemForm.id ? 'Actualizar Item' : 'Crear Item'}
                 </button>
               </div>
             </form>
