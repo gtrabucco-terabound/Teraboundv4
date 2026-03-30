@@ -12,6 +12,7 @@ export type { ReleasesRepository } from './contracts/releases-repository';
 export type { TenantsRepository } from './contracts/tenants-repository';
 export type { TenantsModulesRepository } from './contracts/tenants-modules-repository';
 export * from './contracts/security-repositories';
+export * from './contracts/navigation-repository';
 
 // Implementaciones Firestore
 export { FirestoreModulesRepository } from './firestore/firestore-modules-repository';
@@ -25,5 +26,6 @@ export * from './firestore/firestore-users-repository';
 export * from './firestore/firestore-memberships-repository';
 export * from './firestore/firestore-roles-repository';
 export * from './firestore/firestore-policies-repository';
+export * from './firestore/firestore-navigation-repository';
 export * from './seed/security-seed';
 
