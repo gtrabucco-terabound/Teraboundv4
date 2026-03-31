@@ -4,9 +4,10 @@
 
 /** _gl_event_catalog/{eventType} */
 export interface EventCatalogEntry {
-  id?: string;
+  eventType: string;
   domain: string;
   version: number;
+  description: string;
   severity: 'info' | 'warning' | 'critical';
   retentionDays: number;
   active: boolean;

@@ -41,17 +41,40 @@ export interface UserRecord extends AuthenticatedUser {
 
 /** Evento de auditoría — todo cambio relevante genera uno */
 export interface AuditEvent {
+  tenantId?: string;
+  moduleId?: string;
+
   eventType: string;
   entityType: string;
   entityId: string;
+
   actorUserId: string;
   actorType: 'user' | 'system' | 'support';
+  
   action: string;
-  tenantId?: string;
-  moduleId?: string;
+
   before?: Record<string, unknown>;
   after?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+
   severity: 'info' | 'warning' | 'critical';
+  
+  status: 'success' | 'failure';
+  errorCode?: string;
+  correlationId?: string;
+  source: 'ui' | 'function' | 'system' | 'support';
+
+  createdAt: Date;
+}
+
+/** Log de eventos por tenant — específico para actividad del negocio */
+export interface TenantEventLog {
+  id?: string;
+  eventType: string;
+  moduleId?: string;
+  entityType: string;
+  entityId: string;
+  actorUserId: string;
+  payload?: Record<string, unknown>;
   createdAt: Date;
 }
