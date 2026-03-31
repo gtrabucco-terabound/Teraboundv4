@@ -104,14 +104,13 @@ export type Cardinality = (typeof Cardinality)[keyof typeof Cardinality];
 
 export const RelationshipStrategy = {
   REFERENCE: 'reference',
-  PROJECTION: 'projection',
-  EVENT_DRIVEN: 'event-driven',
+  EMBEDDED: 'embedded',
 } as const;
 export type RelationshipStrategy = (typeof RelationshipStrategy)[keyof typeof RelationshipStrategy];
 
 export const CascadePolicy = {
-  NONE: 'none',
   RESTRICT: 'restrict',
-  SOFT_DELETE: 'soft-delete',
+  CASCADE: 'cascade',
+  SET_NULL: 'set_null',
 } as const;
 export type CascadePolicy = (typeof CascadePolicy)[keyof typeof CascadePolicy];

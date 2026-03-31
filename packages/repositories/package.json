@@ -7,7 +7,8 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist",
-    "seed:master-data": "ts-node src/seed/master-data-seed-runner.ts"
+    "seed:master-data": "ts-node src/seed/master-data-seed-runner.ts",
+    "seed:governance": "ts-node src/seed/governance-seed-runner.ts"
   },
   "dependencies": {
     "@terabound/domain": "*",

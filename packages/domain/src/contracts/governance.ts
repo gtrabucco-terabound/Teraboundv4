@@ -4,11 +4,11 @@
 
 import type { Cardinality, RelationshipStrategy, CascadePolicy } from './enums';
 
-/** _gl_entities/{entityId} */
 export interface EntityDefinition {
   id?: string;
   key: string;
   name: string;
+  description?: string;
   moduleId?: string;
   scope: 'global' | 'tenant';
   storagePath: string;
@@ -16,7 +16,8 @@ export interface EntityDefinition {
   displayField?: string;
   auditable: boolean;
   softDelete: boolean;
-  active: boolean;
+  isSystem: boolean;
+  isActive: boolean;
   createdAt: Date;
   createdBy: string;
   updatedAt: Date;
@@ -35,7 +36,7 @@ export interface RelationshipDefinition {
   crossModule: boolean;
   strategy: RelationshipStrategy;
   cascadePolicy: CascadePolicy;
-  active: boolean;
+  isActive: boolean;
   createdAt: Date;
   createdBy: string;
   updatedAt: Date;
@@ -49,8 +50,12 @@ export interface ValidationRule {
   name: string;
   type: 'required' | 'enum' | 'format' | 'custom';
   field: string;
+  value?: any;
+  errorMessage?: string;
   config: Record<string, unknown>;
-  active: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  createdBy: string;
   updatedAt: Date;
   updatedBy: string;
 }

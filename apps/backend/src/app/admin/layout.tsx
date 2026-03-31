@@ -30,7 +30,10 @@ import {
   Users,
   Fingerprint,
   Lock,
-  Key
+  Key,
+  ShieldCheck,
+  Link as LinkIcon,
+  CheckSquare
 } from 'lucide-react';
 
 
@@ -84,11 +87,11 @@ const navigation = [
   },
   {
     label: 'Gobierno de Datos',
-    icon: FileSearch,
+    icon: ShieldCheck,
     children: [
-      { label: 'Entidades', href: '/admin/data/entities', icon: FileSearch },
-      { label: 'Relaciones', href: '/admin/data/relationships', icon: FileSearch },
-      { label: 'Validaciones', href: '/admin/data/validation', icon: FileSearch },
+      { label: 'Entidades', href: '/admin/data-governance/entities', icon: Database },
+      { label: 'Relaciones', href: '/admin/data-governance/relationships', icon: LinkIcon },
+      { label: 'Validaciones', href: '/admin/data-governance/validations', icon: CheckSquare },
     ],
   },
   {
