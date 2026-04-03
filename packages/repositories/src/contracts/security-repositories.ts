@@ -23,7 +23,7 @@ export interface RolesRepository {
   listGlobal(): Promise<RoleDefinition[]>;
   listByTenant(tenantId: string): Promise<RoleDefinition[]>;
   getById(id: string, tenantId?: string): Promise<RoleDefinition | null>;
-  create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, tenantId?: string): Promise<string>;
+  create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt'>, tenantId?: string): Promise<string>;
   update(id: string, data: Partial<RoleDefinition>, tenantId?: string): Promise<void>;
   delete(id: string, tenantId?: string): Promise<void>;
 }

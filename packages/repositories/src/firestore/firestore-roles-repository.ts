@@ -11,14 +11,12 @@ import {
   deleteDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { FirestoreAuditRepository } from './firestore-audit-repository';
 
 import type { RoleDefinition } from '@terabound/domain';
 import type { RolesRepository } from '../contracts/security-repositories';
 
 export class FirestoreRolesRepository implements RolesRepository {
   private globalCollection = '_gl_roles';
-  private audit = new FirestoreAuditRepository();
 
   async listGlobal(): Promise<RoleDefinition[]> {
     const db = getFirebaseFirestore();
@@ -41,7 +39,7 @@ export class FirestoreRolesRepository implements RolesRepository {
     return { id: snapshot.id, ...snapshot.data() } as any;
   }
 
-  async create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>, tenantId?: string): Promise<string> {
+  async create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt'>, tenantId?: string): Promise<string> {
     try {
       const db = getFirebaseFirestore();
       // GAP 3: Determinar scope y colección
@@ -54,27 +52,6 @@ export class FirestoreRolesRepository implements RolesRepository {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-
-      // GAP 5: Auditoría
-      if (tenantId) {
-        await this.audit.logTenant(tenantId, {
-          eventType: 'RoleCreated',
-          entityType: 'Role',
-          entityId: docRef.id,
-          actorUserId: 'system-admin',
-          payload: { roleKey: role.key }
-        });
-      } else {
-        await this.audit.logGlobal({
-          eventType: 'RoleCreated',
-          entityType: 'Role',
-          entityId: docRef.id,
-          actorUserId: 'system-admin',
-          actorType: 'user',
-          action: 'CREATE',
-          severity: 'info'
-        });
-      }
 
       return docRef.id;
     } catch (error) {
@@ -92,26 +69,6 @@ export class FirestoreRolesRepository implements RolesRepository {
         ...data,
         updatedAt: serverTimestamp(),
       });
-
-      // GAP 5: Auditoría
-      if (tenantId) {
-        await this.audit.logTenant(tenantId, {
-          eventType: 'RoleUpdated',
-          entityType: 'Role',
-          entityId: id,
-          actorUserId: 'system-admin'
-        });
-      } else {
-        await this.audit.logGlobal({
-          eventType: 'RoleUpdated',
-          entityType: 'Role',
-          entityId: id,
-          actorUserId: 'system-admin',
-          actorType: 'user',
-          action: 'UPDATE',
-          severity: 'info'
-        });
-      }
     } catch (error) {
       console.error('[FirestoreRolesRepository] Update error:', error);
       throw error;

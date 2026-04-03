@@ -39,6 +39,24 @@ export interface UserRecord extends AuthenticatedUser {
 }
 
 
+/** Origen del evento de auditoría */
+export type AuditSource = 'ui' | 'function' | 'system' | 'support';
+
+/** Estado del resultado de la operación */
+export type AuditStatus = 'success' | 'failure';
+
+/** Niveles de severidad normativa */
+export type AuditSeverity = 'info' | 'warning' | 'critical';
+
+/** Contexto del actor que ejecuta la acción */
+export interface ActorContext {
+  actorUserId: string;
+  actorType: 'user' | 'system' | 'support';
+  source: AuditSource;
+  correlationId?: string;
+  tenantId?: string; // Tenant desde el que opera el actor
+}
+
 /** Evento de auditoría — todo cambio relevante genera uno */
 export interface AuditEvent {
   tenantId?: string;
@@ -57,12 +75,12 @@ export interface AuditEvent {
   after?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 
-  severity: 'info' | 'warning' | 'critical';
+  severity: AuditSeverity;
+  source: AuditSource;
+  status: AuditStatus;
   
-  status: 'success' | 'failure';
   errorCode?: string;
   correlationId?: string;
-  source: 'ui' | 'function' | 'system' | 'support';
 
   createdAt: Date;
 }

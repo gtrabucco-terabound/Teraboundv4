@@ -35,6 +35,8 @@ export * from './firestore/firestore-catalog-repository';
 export * from './firestore/firestore-governance-repository';
 export * from './firestore/firestore-audit-repository';
 
+// Re-exportar infraestructura de auditoría desde el paquete dedicado
+export * from '@terabound/audit';
+
 export * from './seed/security-seed';
 export * from './seed/master-data-seed';
-

@@ -12,11 +12,14 @@
   },
   "dependencies": {
     "@terabound/domain": "*",
+    "@terabound/audit": "*",
     "@terabound/firebase-client": "*",
     "@terabound/config": "*",
     "firebase": "^11.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "rimraf": "^5.0.0",
+    "typescript": "^5.7.0",
+    "dotenv": "^16.4.5"
   }
 }

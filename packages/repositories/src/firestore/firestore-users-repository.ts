@@ -10,13 +10,11 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@terabound/firebase-client';
-import { FirestoreAuditRepository } from './firestore-audit-repository';
 import type { UserRecord } from '@terabound/domain';
 import type { UsersRepository } from '../contracts/security-repositories';
 
 export class FirestoreUsersRepository implements UsersRepository {
   private readonly collectionName = 'users';
-  private audit = new FirestoreAuditRepository();
 
   async list(): Promise<UserRecord[]> {
     const db = getFirebaseFirestore();
@@ -52,18 +50,6 @@ export class FirestoreUsersRepository implements UsersRepository {
         updatedBy: 'system_admin'
       });
 
-      // GAP 5: Auditoría
-      await this.audit.logGlobal({
-        eventType: 'UserCreated',
-        entityType: 'User',
-        entityId: docRef.id,
-        actorUserId: 'system-admin',
-        actorType: 'user',
-        action: 'CREATE',
-        severity: 'info',
-        metadata: { email: (user as any).email, globalType: (user as any).globalType }
-      });
-
       return docRef.id;
     } catch (error) {
       console.error('[FirestoreUsersRepository] Create error:', error);
@@ -79,18 +65,6 @@ export class FirestoreUsersRepository implements UsersRepository {
         ...data,
         updatedAt: serverTimestamp()
       });
-
-      // GAP 5: Auditoría
-      await this.audit.logGlobal({
-        eventType: data.status === 'blocked' ? 'UserBlocked' : 'UserUpdated',
-        entityType: 'User',
-        entityId: id,
-        actorUserId: 'system-admin',
-        actorType: 'user',
-        action: 'UPDATE',
-        severity: 'info'
-      });
-
     } catch (error) {
       console.error('[FirestoreUsersRepository] Update error:', error);
       throw error;

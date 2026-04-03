@@ -4,7 +4,16 @@
 // ============================================================
 
 // Core Context
-export type { TenantContext, AuthenticatedUser, UserRecord, AuditEvent } from './contracts/tenant-context';
+export type { 
+  TenantContext, 
+  AuthenticatedUser, 
+  UserRecord, 
+  AuditEvent,
+  AuditStatus,
+  AuditSource,
+  AuditSeverity,
+  ActorContext
+} from './contracts/tenant-context';
 
 
 // Platform
@@ -56,6 +65,7 @@ export type { Metric } from './contracts/analytics';
 
 // Events
 export type { EventCatalogEntry } from './contracts/events';
+export type { AuditRepository } from './contracts/audit-repository';
 
 // Enums & Constants
 export {

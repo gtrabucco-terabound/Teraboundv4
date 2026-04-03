@@ -17,8 +17,8 @@ import {
   CheckCircle,
   Circle
 } from 'lucide-react';
-import { FirestoreRolesRepository, FirestoreTenantsRepository } from '@terabound/repositories';
-import type { RoleDefinition, Tenant } from '@terabound/domain';
+import type { RoleDefinition } from '@terabound/domain';
+import { createRoleAction, updateRoleAction, getRolesAction } from './actions';
 
 // Permisos Mock de ejemplo (deberían venir de una configuración centralizada)
 const AVAILABLE_PERMISSIONS = [
@@ -54,8 +54,6 @@ export default function RolesPage() {
     active: true,
   });
 
-  const repo = new FirestoreRolesRepository();
-
   useEffect(() => {
     loadRoles();
   }, []);
@@ -63,7 +61,7 @@ export default function RolesPage() {
   const loadRoles = async () => {
     try {
       setLoading(true);
-      const globalRoles = await repo.listGlobal();
+      const globalRoles = await getRolesAction();
       setRoles(globalRoles);
       if (globalRoles.length > 0 && !selectedRole) {
         setSelectedRole(globalRoles[0] || null);
@@ -83,7 +81,7 @@ export default function RolesPage() {
 
     try {
       setIsSaving(true);
-      await repo.create({
+      await createRoleAction({
         name: formData.name,
         key: formData.key,
         description: formData.description,
@@ -127,7 +125,7 @@ export default function RolesPage() {
      if (!selectedRole || !selectedRole.id) return;
      try {
        setIsSaving(true);
-       await repo.update(selectedRole.id, { permissions: selectedRole.permissions });
+       await updateRoleAction(selectedRole.id, { permissions: selectedRole.permissions });
        alert('Permisos actualizados correctamente.');
      } catch (err) {
        alert('Error al guardar los permisos.');

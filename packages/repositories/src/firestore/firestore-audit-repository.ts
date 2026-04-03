@@ -15,8 +15,7 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import type { AuditEvent, TenantEventLog, EventCatalogEntry } from '@terabound/domain';
-import type { AuditRepository } from '../contracts/audit-repository';
+import type { AuditRepository, AuditEvent, TenantEventLog, EventCatalogEntry } from '@terabound/domain';
 
 
 export class FirestoreAuditRepository implements AuditRepository {
