@@ -10,12 +10,13 @@ import {
   RefreshCw, 
   CheckCircle2, 
   Clock, 
-  XOctagon 
+  XOctagon,
+  Plus
 } from 'lucide-react';
-import type { Job } from '@terabound/domain';
+import { Job, JobStatus } from '@terabound/domain';
 
 // Mock Data para la UI Shell
-const MOCK_JOBS: Job[] = [
+const INITIAL_MOCK_JOBS: Job[] = [
   {
     id: 'j-001',
     type: 'syncData',
@@ -51,14 +52,44 @@ const MOCK_JOBS: Job[] = [
 ];
 
 export default function JobsPage() {
+  const [jobs, setJobs] = useState<Job[]>(INITIAL_MOCK_JOBS);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // States for Drawer
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    type: '',
+    scope: 'platform' as 'platform' | 'tenant' | 'module',
+    tenantId: '',
+    moduleId: ''
+  });
+
+  const handleCreateJob = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.type) return;
+
+    const newJob: Job = {
+      id: `j-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      type: formData.type,
+      scope: formData.scope,
+      tenantId: formData.tenantId || undefined,
+      moduleId: formData.moduleId || undefined,
+      status: 'queued',
+      createdAt: new Date(),
+      createdBy: 'admin-123'
+    };
+
+    setJobs([newJob, ...jobs]);
+    setIsDrawerOpen(false);
+    setFormData({ type: '', scope: 'platform', tenantId: '', moduleId: '' });
+  };
   
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'running': return <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />;
       case 'completed': return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
       case 'failed': return <XOctagon className="w-4 h-4 text-rose-400" />;
-      case 'pending': return <Clock className="w-4 h-4 text-surface-400" />;
+      case 'queued': return <Clock className="w-4 h-4 text-surface-400" />;
       default: return <Activity className="w-4 h-4 text-surface-400" />;
     }
   };
@@ -89,7 +120,11 @@ export default function JobsPage() {
           <button className="btn-secondary py-2">
             <RefreshCw className="w-4 h-4 mr-2" /> Refrescar
           </button>
-          <button className="btn-primary py-2 px-6">
+          <button 
+            type="button"
+            className="btn-primary py-2 px-6"
+            onClick={() => setIsDrawerOpen(true)}
+          >
             <Play className="w-4 h-4 mr-2" /> Nuevo Job
           </button>
         </div>
@@ -143,7 +178,7 @@ export default function JobsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-800">
-            {MOCK_JOBS.map((job) => (
+            {jobs.map((job) => (
               <tr key={job.id} className="hover:bg-surface-800/20 transition-colors group">
                 <td className="p-4">
                   <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${getStatusBg(job.status)}`}>
@@ -183,6 +218,111 @@ export default function JobsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Drawer Overlay - Nuevo Job */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-50">Nuevo Background Job</h2>
+                <p className="text-sm text-surface-400 mt-1">Encola una nueva tarea asíncrona en el sistema.</p>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+                type="button"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateJob} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Tipo de Trabajo</label>
+                  <select 
+                    className="input appearance-none bg-surface-950"
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    required
+                  >
+                    <option value="" disabled>Selecciona un tipo...</option>
+                    <option value="syncData">Sincronización de Datos (syncData)</option>
+                    <option value="tenantBackup">Backup de Tenant (tenantBackup)</option>
+                    <option value="reportGeneration">Generación de Reportes (reportGeneration)</option>
+                    <option value="maintenance">Mantenimiento (maintenance)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Alcance (Scope)</label>
+                  <select 
+                    className="input appearance-none bg-surface-950"
+                    value={formData.scope}
+                    onChange={(e) => setFormData({ ...formData, scope: e.target.value as any })}
+                  >
+                    <option value="platform">Plataforma (Global)</option>
+                    <option value="tenant">Tenant</option>
+                    <option value="module">Módulo</option>
+                  </select>
+                </div>
+
+                {formData.scope === 'tenant' && (
+                  <div className="space-y-2 animate-fade-in">
+                    <label className="text-xs font-bold text-surface-500 uppercase">ID del Tenant</label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="Ej: tn-alpha"
+                      className="input font-mono"
+                      value={formData.tenantId}
+                      onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {formData.scope === 'module' && (
+                  <div className="space-y-2 animate-fade-in">
+                    <label className="text-xs font-bold text-surface-500 uppercase">ID del Módulo</label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="Ej: billing"
+                      className="input font-mono"
+                      value={formData.moduleId}
+                      onChange={(e) => setFormData({ ...formData, moduleId: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+            </form>
+
+            <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="btn-secondary py-3"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={handleCreateJob}
+                disabled={!formData.type}
+                className="btn-primary py-3"
+              >
+                <Play className="w-4 h-4 mr-2" /> Encolar Job
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

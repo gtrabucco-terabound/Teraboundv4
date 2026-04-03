@@ -12,10 +12,10 @@ import {
   Flame,
   ArrowRight
 } from 'lucide-react';
-import type { Incident } from '@terabound/domain';
+import { Incident, IncidentSeverity } from '@terabound/domain';
 
 // Mock Data para la UI Shell
-const MOCK_INCIDENTS: Incident[] = [
+const INITIAL_MOCK_INCIDENTS: Incident[] = [
   {
     id: 'inc-100',
     title: 'Caída de la Pasarela de Pagos',
@@ -49,7 +49,39 @@ const MOCK_INCIDENTS: Incident[] = [
 ];
 
 export default function IncidentsPage() {
+  const [incidents, setIncidents] = useState<Incident[]>(INITIAL_MOCK_INCIDENTS);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Drawer states
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    severity: 'minor' as 'minor' | 'major' | 'critical',
+    moduleIds: '',
+    tenantIds: ''
+  });
+
+  const handleCreateIncident = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title) return;
+
+    const newIncident: Incident = {
+      id: `inc-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      title: formData.title,
+      description: formData.description,
+      severity: formData.severity,
+      status: 'investigating',
+      moduleIds: formData.moduleIds ? formData.moduleIds.split(',').map(s => s.trim()) : undefined,
+      tenantIds: formData.tenantIds ? formData.tenantIds.split(',').map(s => s.trim()) : undefined,
+      createdAt: new Date(),
+      createdBy: 'admin-123'
+    };
+
+    setIncidents([newIncident, ...incidents]);
+    setIsDrawerOpen(false);
+    setFormData({ title: '', description: '', severity: 'minor', moduleIds: '', tenantIds: '' });
+  };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -86,7 +118,11 @@ export default function IncidentsPage() {
           <button className="btn-secondary py-2">
             <RefreshCw className="w-4 h-4 mr-2" /> Refrescar
           </button>
-          <button className="btn-primary py-2 px-6 bg-amber-500 hover:bg-amber-400 text-surface-950">
+          <button 
+            type="button"
+            className="btn-primary py-2 px-6 bg-amber-500 hover:bg-amber-400 text-surface-950"
+            onClick={() => setIsDrawerOpen(true)}
+          >
             <Plus className="w-4 h-4 mr-2" /> Declarar Incidente
           </button>
         </div>
@@ -106,7 +142,7 @@ export default function IncidentsPage() {
 
       {/* Incident List */}
       <div className="space-y-3">
-        {MOCK_INCIDENTS.map((incident) => (
+        {incidents.map((incident) => (
           <div key={incident.id} className="card p-5 hover:border-surface-600 transition-colors group cursor-pointer">
              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex gap-4">
@@ -160,6 +196,113 @@ export default function IncidentsPage() {
           </div>
         ))}
       </div>
+
+      {/* Drawer Overlay - Declarar Incidente */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-50 text-amber-500">Declarar Incidente</h2>
+                <p className="text-sm text-surface-400 mt-1">Registra un evento crítico para informar e investigar.</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateIncident} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Título del Incidente</label>
+                  <input 
+                    required
+                    type="text" 
+                    placeholder="Ej: Caída de Pasarela de Pagos"
+                    className="input"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Gravedad</label>
+                  <select 
+                    className="input appearance-none bg-surface-950"
+                    value={formData.severity}
+                    onChange={(e) => setFormData({ ...formData, severity: e.target.value as any })}
+                  >
+                    <option value="minor">Menor (Minor)</option>
+                    <option value="major">Mayor (Major)</option>
+                    <option value="critical">Crítica (Critical)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Descripción / Observaciones</label>
+                  <textarea 
+                    rows={3}
+                    placeholder="Detalles sobre cómo afecta esto al sistema..."
+                    className="input py-3 resize-none"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Módulos Afectados (opcional, sep. coma)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej: billing, auth"
+                    className="input font-mono"
+                    value={formData.moduleIds}
+                    onChange={(e) => setFormData({ ...formData, moduleIds: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-xs font-bold text-surface-500 uppercase">Tenants Afectados (opcional, sep. coma)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej: tn-alpha, tn-europe-1"
+                    className="input font-mono"
+                    value={formData.tenantIds}
+                    onChange={(e) => setFormData({ ...formData, tenantIds: e.target.value })}
+                  />
+                </div>
+              </div>
+            </form>
+
+            <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm">
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="btn-secondary py-3"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={handleCreateIncident}
+                disabled={!formData.title}
+                className="btn-primary py-3 bg-amber-500 hover:bg-amber-400 text-surface-950"
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" /> Declarar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
