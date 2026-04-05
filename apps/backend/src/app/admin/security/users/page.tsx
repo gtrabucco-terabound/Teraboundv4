@@ -16,7 +16,12 @@ import {
   Users,
   Plus
 } from 'lucide-react';
-import { FirestoreUsersRepository } from '@terabound/repositories';
+import { 
+  getUsersAction, 
+  createUserAction, 
+  updateUserAction, 
+  toggleUserStatusAction 
+} from './actions';
 import { UserStatus, GlobalType } from '@terabound/domain';
 import type { UserRecord } from '@terabound/domain';
 
@@ -39,11 +44,9 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
-    globalType: 'readonly_auditor',
+    globalType: 'standard' as any,
     status: 'active',
   });
-
-  const repo = new FirestoreUsersRepository();
 
   useEffect(() => {
     loadUsers();
@@ -52,7 +55,7 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await repo.list();
+      const data = await getUsersAction();
       setUsers(data);
     } catch (err: any) {
       console.error('[Users] Error:', err);
@@ -66,14 +69,18 @@ export default function UsersPage() {
     e.preventDefault();
     try {
       setIsSaving(true);
-      await repo.create({
-        ...formData,
+      await createUserAction({
+        email: formData.email,
+        displayName: formData.displayName,
+        globalType: formData.globalType,
+        status: 'active',
+        photoURL: '',
+        phoneNumber: '',
         metadata: {},
         preferences: {},
-        lastLoginAt: new Date(),
       } as any);
       setIsDrawerOpen(false);
-      setFormData({ email: '', displayName: '', globalType: 'readonly_auditor', status: 'active' });
+      setFormData({ email: '', displayName: '', globalType: 'standard', status: 'active' });
       await loadUsers();
     } catch (err) {
       alert('Error al crear usuario: ' + (err as Error).message);
@@ -84,8 +91,8 @@ export default function UsersPage() {
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     try {
-      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
-      await repo.update(id, { status: newStatus as any });
+      const isActive = currentStatus === 'active';
+      await toggleUserStatusAction(id, !isActive);
       await loadUsers();
     } catch (err) {
       alert('Error al cambiar estado.');

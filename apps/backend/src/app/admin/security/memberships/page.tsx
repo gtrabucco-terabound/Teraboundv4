@@ -13,9 +13,13 @@ import {
   Trash2,
   History
 } from 'lucide-react';
-import { FirestoreMembershipsRepository, FirestoreTenantsRepository } from '@terabound/repositories';
+import { 
+  getGlobalMembershipsAction, 
+  revokeMembershipAction, 
+  changeMembershipRoleAction 
+} from './actions';
 import { MembershipStatus } from '@terabound/domain';
-import type { Membership, Tenant } from '@terabound/domain';
+import type { Membership } from '@terabound/domain';
 
 const statusStyles = {
   [MembershipStatus.ACTIVE]: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: ShieldCheck },
@@ -31,9 +35,6 @@ export default function MembershipsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const mRepo = new FirestoreMembershipsRepository();
-  const tRepo = new FirestoreTenantsRepository();
-
   useEffect(() => {
     loadData();
   }, []);
@@ -41,21 +42,9 @@ export default function MembershipsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // En un escenario real con muchos datos, esto se haría bajo demanda
-      // Para el admin, cargamos los tenants primero para mapear nombres
-      const tenantData = await tRepo.list();
-      const tenantMap: Record<string, string> = {};
-      tenantData.forEach(t => { if(t.id) tenantMap[t.id] = t.legalName; });
-      setTenants(tenantMap);
-
-      // Cargamos todas las membresías de todos los tenants (limitado para el demo/admin inicial)
-      // Como collectionGroup requiere índices, aquí simulamos la carga por tenant o transversal
-      let allMembers: Membership[] = [];
-      for (const tId of Object.keys(tenantMap)) {
-         const ms = await mRepo.listByTenant(tId);
-         allMembers = [...allMembers, ...ms.map(m => ({ ...m, tenantId: tId } as any))];
-      }
-      setMemberships(allMembers);
+      const result = await getGlobalMembershipsAction();
+      setTenants(result.tenants);
+      setMemberships(result.memberships);
     } catch (err: any) {
       console.error('[Memberships] Error:', err);
       setError('Error al cargar el mapa de membresías globales.');
@@ -67,7 +56,7 @@ export default function MembershipsPage() {
   const handleRevoke = async (tenantId: string, membershipId: string) => {
     if (!window.confirm('¿Estás seguro de que deseas revocar este acceso?')) return;
     try {
-      await mRepo.revoke(tenantId, membershipId);
+      await revokeMembershipAction(tenantId, membershipId);
       await loadData();
     } catch (err) {
       alert('Error al revocar acceso.');
@@ -78,7 +67,7 @@ export default function MembershipsPage() {
     const newRole = window.prompt('Ingrese el nuevo Rol ID:', currentRole);
     if (!newRole || newRole === currentRole) return;
     try {
-      await mRepo.changeRole(tenantId, membershipId, newRole);
+      await changeMembershipRoleAction(tenantId, membershipId, newRole);
       await loadData();
     } catch (err) {
       alert('Error al cambiar rol.');

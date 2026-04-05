@@ -8,13 +8,13 @@ export class FirestoreAdminRolesRepository implements RolesRepository {
   async listGlobal(): Promise<RoleDefinition[]> {
     const db = getFirestoreAdmin();
     const snapshot = await db.collection(this.globalCollection).get();
-    return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as RoleDefinition));
+    return snapshot.docs.map((doc: any) => this.sanitize({ id: doc.id, ...doc.data() }));
   }
 
   async listByTenant(tenantId: string): Promise<RoleDefinition[]> {
     const db = getFirestoreAdmin();
     const snapshot = await db.collection(`tenants/${tenantId}/_tn_roles`).get();
-    return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as RoleDefinition));
+    return snapshot.docs.map((doc: any) => this.sanitize({ id: doc.id, ...doc.data() }));
   }
 
   async getById(id: string, tenantId?: string): Promise<RoleDefinition | null> {
@@ -23,7 +23,22 @@ export class FirestoreAdminRolesRepository implements RolesRepository {
     const docRef = db.collection(path).doc(id);
     const snapshot = await docRef.get();
     if (!snapshot.exists) return null;
-    return { id: snapshot.id, ...snapshot.data() } as any;
+    return this.sanitize({ id: snapshot.id, ...snapshot.data() });
+  }
+
+  /**
+   * Convierte Timestamps de Firebase a Strings ISO para serialización en Server Actions
+   */
+  private sanitize(data: any): RoleDefinition {
+    if (!data) return data;
+    const result = { ...data };
+    if (result.createdAt && typeof result.createdAt.toDate === 'function') {
+      result.createdAt = result.createdAt.toDate().toISOString();
+    }
+    if (result.updatedAt && typeof result.updatedAt.toDate === 'function') {
+      result.updatedAt = result.updatedAt.toDate().toISOString();
+    }
+    return result as RoleDefinition;
   }
 
   async create(role: Omit<RoleDefinition, 'id' | 'createdAt' | 'updatedAt'>, tenantId?: string): Promise<string> {
