@@ -1,19 +1,16 @@
 'use server';
 
 import { CreateRoleUseCase, UpdateRoleUseCase } from '@terabound/application';
-import { FirestoreRolesRepository } from '@terabound/repositories';
+import { FirestoreAdminRolesRepository } from '@terabound/repositories/src/firestore/admin/firestore-admin-roles-repository';
+import { FirestoreAdminAuditRepository } from '@terabound/repositories/src/firestore/admin/firestore-admin-audit-repository';
 import { AuditService, AuditEventFactory } from '@terabound/audit';
-import { FirestoreAuditRepository } from '@terabound/repositories/src/firestore/firestore-audit-repository'; // Asumiendo que existe
 import type { RoleDefinition, ActorContext } from '@terabound/domain';
 
 // Inicialización de dependencias (Idealmente mediante inyección de dependencias)
-const rolesRepo = new FirestoreRolesRepository();
-// MOCK implementation for AuditRepo until a real one is hooked if missing
-const mockAuditRepo = {
-  logGlobal: async (e: any) => console.log('MOCK AUDIT GLOBAL', e),
-  logTenant: async (t: string, e: any) => console.log('MOCK AUDIT TENANT', t, e),
-};
-const auditService = new AuditService(mockAuditRepo as any);
+// Inicialización de dependencias configuradas para servidor (Admin)
+const rolesRepo = new FirestoreAdminRolesRepository();
+const auditRepo = new FirestoreAdminAuditRepository();
+const auditService = new AuditService(auditRepo);
 const createRoleUseCase = new CreateRoleUseCase(rolesRepo, auditService);
 const updateRoleUseCase = new UpdateRoleUseCase(rolesRepo, auditService);
 

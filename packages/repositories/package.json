@@ -14,6 +14,7 @@
     "@terabound/domain": "*",
     "@terabound/audit": "*",
     "@terabound/firebase-client": "*",
+    "@terabound/firebase-admin": "*",
     "@terabound/config": "*",
     "firebase": "^11.0.0"
   },

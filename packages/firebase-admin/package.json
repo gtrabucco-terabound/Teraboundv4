@@ -1,0 +1,10 @@
+{
+  "name": "@terabound/firebase-admin",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^13.7.0"
+  }
+}
