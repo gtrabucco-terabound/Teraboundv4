@@ -137,7 +137,11 @@ export default function RolesPage() {
      if (!selectedRole || !selectedRole.id) return;
      try {
        setIsSaving(true);
-       await updateRoleAction(selectedRole.id, { permissions: selectedRole.permissions });
+       await updateRoleAction(
+         selectedRole.id, 
+         { permissions: selectedRole.permissions },
+         contextTenantId || undefined
+       );
        alert('Permisos actualizados correctamente.');
      } catch (err) {
        alert('Error al guardar los permisos.');
