@@ -17,8 +17,9 @@ import {
   CheckCircle,
   Circle
 } from 'lucide-react';
-import type { RoleDefinition } from '@terabound/domain';
+import type { RoleDefinition, Tenant } from '@terabound/domain';
 import { createRoleAction, updateRoleAction, getRolesAction } from './actions';
+import { getTenantsAction } from '../../tenants/actions';
 
 // Permisos Mock de ejemplo (deberían venir de una configuración centralizada)
 const AVAILABLE_PERMISSIONS = [
@@ -36,6 +37,7 @@ const AVAILABLE_PERMISSIONS = [
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<RoleDefinition[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,27 +51,35 @@ export default function RolesPage() {
     name: '',
     key: '',
     description: '',
-    scope: 'platform' as 'platform' | 'tenant', // GAP 3
+    scope: 'platform' as 'platform' | 'tenant',
+    selectedTenantId: '',
     isSystem: false,
     active: true,
   });
 
   useEffect(() => {
-    loadRoles();
+    loadData();
   }, []);
 
-  const loadRoles = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const globalRoles = await getRolesAction();
+      
+      // Cargar Roles y Tenants en paralelo
+      const [globalRoles, tenantList] = await Promise.all([
+        getRolesAction(),
+        getTenantsAction()
+      ]);
+
       setRoles(globalRoles);
+      setTenants(tenantList);
+
       if (globalRoles.length > 0 && !selectedRole) {
         setSelectedRole(globalRoles[0] || null);
       }
-
     } catch (err: any) {
       console.error('[Roles] Error:', err);
-      setError('Error al cargar la definición de roles.');
+      setError('Error al cargar la matriz de seguridad.');
     } finally {
       setLoading(false);
     }
@@ -87,10 +97,10 @@ export default function RolesPage() {
         description: formData.description,
         scope: formData.scope,
         isSystem: formData.isSystem,
-        active: true, // Campo requerido por RoleDefinition
+        active: true,
         permissions: [],
         scopes: {},
-      });
+      }, formData.scope === 'tenant' ? formData.selectedTenantId : undefined);
 
       setIsDrawerOpen(false);
       setFormData({
@@ -98,10 +108,11 @@ export default function RolesPage() {
         key: '',
         description: '',
         scope: 'platform',
+        selectedTenantId: '',
         isSystem: false,
         active: true,
       });
-      await loadRoles();
+      await loadData();
     } catch (err: any) {
       console.error('[Roles] Create Error:', err);
       alert('Error al crear el rol.');
@@ -353,6 +364,23 @@ export default function RolesPage() {
                     <option value="tenant">Tenant (Específico)</option>
                   </select>
                 </div>
+
+                {formData.scope === 'tenant' && (
+                  <div className="space-y-2 animate-fade-in">
+                    <label className="text-xs font-bold text-surface-500 uppercase">Seleccionar Empresa (Tenant)</label>
+                    <select 
+                      required
+                      className="input appearance-none bg-surface-950 border-orange-500/30"
+                      value={formData.selectedTenantId}
+                      onChange={(e) => setFormData({ ...formData, selectedTenantId: e.target.value })}
+                    >
+                      <option value="">-- Elige una empresa --</option>
+                      {tenants.map(t => (
+                        <option key={t.id} value={t.id}>{t.legalName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-surface-500 uppercase">Descripción</label>
                   <textarea 
