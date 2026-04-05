@@ -20,7 +20,7 @@ export async function getUsersAction(): Promise<UserRecord[]> {
 }
 
 export async function createUserAction(
-  data: Omit<UserRecord, 'id' | 'createdAt' | 'updatedAt' | 'lastAccessAt' | 'createdBy' | 'updatedBy'>
+  data: Omit<UserRecord, 'userId' | 'createdAt' | 'updatedAt' | 'lastAccessAt' | 'createdBy' | 'updatedBy'>
 ): Promise<string> {
   const id = await usersRepo.create({
     ...data,
@@ -38,7 +38,7 @@ export async function createUserAction(
     source: MOCK_ACTOR.source,
     severity: 'info',
     status: 'success',
-    payload: { email: data.email } as any
+    metadata: { email: data.email }
   });
 
   return id;
@@ -57,7 +57,7 @@ export async function updateUserAction(id: string, data: Partial<UserRecord>): P
     source: MOCK_ACTOR.source,
     severity: 'info',
     status: 'success',
-    payload: data as any
+    metadata: data as any
   });
 }
 

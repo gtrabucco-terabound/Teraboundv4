@@ -8,17 +8,17 @@ export class FirestoreAdminUsersRepository implements UsersRepository {
   async list(): Promise<UserRecord[]> {
     const db = getFirestoreAdmin();
     const snapshot = await db.collection(this.collection).get();
-    return snapshot.docs.map(doc => this.sanitize({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => this.sanitize({ userId: doc.id, ...doc.data() }));
   }
 
   async getById(id: string): Promise<UserRecord | null> {
     const db = getFirestoreAdmin();
     const snap = await db.collection(this.collection).doc(id).get();
     if (!snap.exists) return null;
-    return this.sanitize({ id: snap.id, ...snap.data() });
+    return this.sanitize({ userId: snap.id, ...snap.data() });
   }
 
-  async create(user: Omit<UserRecord, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<string> {
+  async create(user: Omit<UserRecord, 'userId' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<string> {
     const db = getFirestoreAdmin();
     const docRef = await db.collection(this.collection).add({
       ...user,
@@ -42,6 +42,8 @@ export class FirestoreAdminUsersRepository implements UsersRepository {
     if (result.createdAt?.toDate) result.createdAt = result.createdAt.toDate().toISOString();
     if (result.updatedAt?.toDate) result.updatedAt = result.updatedAt.toDate().toISOString();
     if (result.lastAccessAt?.toDate) result.lastAccessAt = result.lastAccessAt.toDate().toISOString();
+    if (result.lastLoginAt?.toDate) result.lastLoginAt = result.lastLoginAt.toDate().toISOString();
+    if (result.lastSeenAt?.toDate) result.lastSeenAt = result.lastSeenAt.toDate().toISOString();
     return result as UserRecord;
   }
 }
