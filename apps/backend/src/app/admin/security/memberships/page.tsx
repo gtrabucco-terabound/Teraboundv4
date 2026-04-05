@@ -11,15 +11,21 @@ import {
   Building2,
   ExternalLink,
   Trash2,
-  History
+  History,
+  Plus,
+  Key
 } from 'lucide-react';
 import { 
   getGlobalMembershipsAction, 
   revokeMembershipAction, 
-  changeMembershipRoleAction 
+  changeMembershipRoleAction,
+  createMembershipAction
 } from './actions';
+import { getUsersAction } from '../users/actions';
+import { getRolesAction } from '../roles/actions';
+import { getTenantsAction } from '../../tenants/actions';
 import { MembershipStatus } from '@terabound/domain';
-import type { Membership } from '@terabound/domain';
+import type { Membership, UserRecord, Tenant, RoleDefinition } from '@terabound/domain';
 
 const statusStyles = {
   [MembershipStatus.ACTIVE]: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: ShieldCheck },
@@ -30,10 +36,22 @@ const statusStyles = {
 
 export default function MembershipsPage() {
   const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [tenants, setTenants] = useState<Record<string, string>>({}); // tenantId -> legalName
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [roles, setRoles] = useState<RoleDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Estados para nueva membresía
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    userId: '',
+    tenantId: '',
+    roleId: '',
+    status: 'active' as any,
+  });
 
   useEffect(() => {
     loadData();
@@ -42,14 +60,64 @@ export default function MembershipsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const result = await getGlobalMembershipsAction();
-      setTenants(result.tenants);
-      setMemberships(result.memberships);
+      const [mResult, tList, uList] = await Promise.all([
+        getGlobalMembershipsAction(),
+        getTenantsAction(),
+        getUsersAction()
+      ]);
+      setTenants(tList);
+      setUsers(uList);
+      setMemberships(mResult.memberships);
     } catch (err: any) {
       console.error('[Memberships] Error:', err);
       setError('Error al cargar el mapa de membresías globales.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Cargar roles cuando cambia el tenant seleccionado en el form
+  useEffect(() => {
+    if (formData.tenantId) {
+       loadRolesForTenant(formData.tenantId);
+    } else {
+       loadGlobalRoles();
+    }
+  }, [formData.tenantId]);
+
+  const loadGlobalRoles = async () => {
+    const r = await getRolesAction(); // Globales
+    setRoles(r);
+  };
+
+  const loadRolesForTenant = async (tId: string) => {
+    const [global, specific] = await Promise.all([
+      getRolesAction(),
+      getRolesAction(tId)
+    ]);
+    setRoles([...global, ...specific]);
+  };
+
+  const handleCreateMembership = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.userId || !formData.tenantId || !formData.roleId) return;
+
+    try {
+      setIsSaving(true);
+      await createMembershipAction(formData.tenantId, {
+        userId: formData.userId,
+        roleId: formData.roleId,
+        status: formData.status,
+        invitedBy: 'admin-123',
+        moduleAccess: [], // Por ahora vacío, se gestionará por políticas
+      });
+      setIsDrawerOpen(false);
+      setFormData({ userId: '', tenantId: '', roleId: '', status: 'active' });
+      await loadData();
+    } catch (err) {
+      alert('Error al crear la membresía.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -77,7 +145,7 @@ export default function MembershipsPage() {
   const filteredMembers = memberships.filter(m => 
     m.userId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (m as any).tenantId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenants[(m as any).tenantId]?.toLowerCase().includes(searchQuery.toLowerCase())
+    (tenants.find(t => t.id === (m as any).tenantId)?.legalName || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
 
@@ -99,12 +167,17 @@ export default function MembershipsPage() {
             <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
               <Users className="w-5 h-5 text-orange-400" />
             </div>
-            Membresías y Accesos
           </h1>
           <p className="section-subtitle mt-2">
             Auditoría transversal de accesos de usuarios a través de los diferentes tenants de la plataforma.
           </p>
         </div>
+        <button 
+          onClick={() => setIsDrawerOpen(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> Nuevo Acceso
+        </button>
       </div>
 
       {/* Toolbar */}
@@ -137,7 +210,8 @@ export default function MembershipsPage() {
         {filteredMembers.length > 0 ? (
           filteredMembers.map((m) => {
             const tenantId = (m as any).tenantId;
-            const tenantName = tenants[tenantId] || 'Tenant Desconocido';
+            const tenant = tenants.find(t => t.id === tenantId);
+            const tenantName = tenant?.legalName || 'Tenant Desconocido';
             const style = statusStyles[m.status] || statusStyles[MembershipStatus.REVOKED];
             const StatusIcon = style.icon;
 
@@ -198,6 +272,127 @@ export default function MembershipsPage() {
           </div>
         )}
       </div>
+
+      {/* Drawer Overlay - Nueva Membresía */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-surface-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg bg-surface-900 border-l border-surface-800 shadow-2xl animate-fade-in-right flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-display font-bold text-surface-50">Gestionar Acceso Transversal</h2>
+                <p className="text-sm text-surface-400 mt-1">Vincula un usuario con una empresa y asigna privilegios.</p>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="p-2 hover:bg-surface-800 rounded-lg transition-colors"
+              >
+                <Plus className="w-6 h-6 text-surface-400 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateMembership} className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-4">
+                {/* Usuario Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">1. Usuario (Global)</label>
+                  <select 
+                    required
+                    className="input bg-surface-950"
+                    value={formData.userId}
+                    onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                  >
+                    <option value="">-- Seleccionar Usuario --</option>
+                    {users.map(u => (
+                      <option key={u.userId} value={u.userId}>{u.displayName} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tenant Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">2. Empresa (Tenant)</label>
+                  <select 
+                    required
+                    className="input bg-surface-950"
+                    value={formData.tenantId}
+                    onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                  >
+                    <option value="">-- Seleccionar Empresa --</option>
+                    {tenants.map(t => (
+                      <option key={t.id} value={t.id}>{t.legalName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Rol Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">3. Rol Asignado</label>
+                  <select 
+                    required
+                    className="input bg-surface-950 border-orange-500/20"
+                    value={formData.roleId}
+                    onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+                  >
+                    <option value="">-- Seleccionar Rol --</option>
+                    {roles.map(r => (
+                      <option key={r.id} value={r.key}>
+                        {r.name} - [{r.scope === 'platform' ? 'SISTEMA' : 'TENANT'}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Status Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-surface-500 uppercase">4. Estado de Invitación</label>
+                  <select 
+                    className="input bg-surface-950"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                  >
+                    <option value="active">Activo Inmediato</option>
+                    <option value="invited">Invitar (Pendiente)</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+
+            <div className="p-6 border-t border-surface-800 grid grid-cols-2 gap-3 bg-surface-900/50 backdrop-blur-sm shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
+              <button 
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                className="btn-secondary py-3 font-bold"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                onClick={handleCreateMembership}
+                disabled={isSaving || !formData.userId || !formData.tenantId || !formData.roleId}
+                className="btn-primary py-3 font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Asignando...
+                  </>
+                ) : (
+                  <>
+                    <Key className="w-4 h-4" />
+                    Activar Acceso
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

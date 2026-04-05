@@ -43,6 +43,7 @@ export default function RolesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<RoleDefinition | null>(null);
   const [permissionQuery, setPermissionQuery] = useState('');
+  const [contextTenantId, setContextTenantId] = useState<string>(''); // Vacio = Global
 
   // Estados para nuevo rol
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -59,15 +60,15 @@ export default function RolesPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [contextTenantId]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       
-      // Cargar Roles y Tenants en paralelo
+      // Cargar Roles according to context
       const [globalRoles, tenantList] = await Promise.all([
-        getRolesAction(),
+        getRolesAction(contextTenantId || undefined),
         getTenantsAction()
       ]);
 
@@ -165,7 +166,26 @@ export default function RolesPage() {
     <div className="h-[calc(100vh-160px)] flex gap-6 relative">
       {/* Sidebar - Roles List */}
       <div className="w-80 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        
+        {/* Context Selector */}
+        <div className="space-y-2">
+           <label className="text-[10px] font-black uppercase text-surface-500 px-1">Ver Contexto:</label>
+           <select 
+             className="w-full bg-surface-900 border border-surface-800 rounded-xl px-3 py-2 text-xs font-bold text-brand-400 focus:border-brand-500/50 transition-all outline-none"
+             value={contextTenantId}
+             onChange={(e) => {
+               setContextTenantId(e.target.value);
+               setSelectedRole(null); // Reset selection
+             }}
+           >
+              <option value="">PLATAFORMA (GLOBAL)</option>
+              {tenants.map(t => (
+                <option key={t.id} value={t.id}>{t.legalName?.toUpperCase()}</option>
+              ))}
+           </select>
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
            <h2 className="text-xs font-black uppercase tracking-widest text-surface-500">Roles del Sistema</h2>
            <button 
              onClick={() => setIsDrawerOpen(true)}
@@ -252,7 +272,7 @@ export default function RolesPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black uppercase text-surface-600">Tipo:</span>
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[9px] font-black uppercase border border-purple-500/20">
-                       <Globe className="w-3 h-3" /> Global
+                       {selectedRole.scope === 'platform' ? <><Globe className="w-3 h-3" /> Global</> : <><Building2 className="w-3 h-3" /> Tenant</>}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 border-l border-surface-800 pl-4">

@@ -45,6 +45,9 @@ export async function updateRoleAction(
   });
 }
 
-export async function getRolesAction(): Promise<RoleDefinition[]> {
+export async function getRolesAction(tenantId?: string): Promise<RoleDefinition[]> {
+  if (tenantId) {
+    return await rolesRepo.listByTenant(tenantId);
+  }
   return await rolesRepo.listGlobal();
 }

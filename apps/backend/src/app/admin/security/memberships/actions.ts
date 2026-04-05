@@ -58,3 +58,24 @@ export async function changeMembershipRoleAction(tenantId: string, membershipId:
     payload: { newRoleId, severity: 'warning' }
   });
 }
+
+export async function createMembershipAction(
+  tenantId: string, 
+  data: Omit<Membership, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>
+): Promise<string> {
+  const id = await membershipsRepo.create(tenantId, {
+    ...data,
+    invitedBy: MOCK_ACTOR.actorUserId // Forzado por sistema para auditoria
+  });
+
+  await auditService.logTenant(tenantId, {
+    eventType: 'MEMBERSHIP_CREATED',
+    entityId: id,
+    entityType: 'membership',
+    actorUserId: MOCK_ACTOR.actorUserId,
+    moduleId: 'security',
+    payload: { userId: data.userId, roleId: data.roleId, status: data.status }
+  });
+
+  return id;
+}
