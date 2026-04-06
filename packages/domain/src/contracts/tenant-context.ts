@@ -96,3 +96,37 @@ export interface TenantEventLog {
   payload?: Record<string, unknown>;
   createdAt: Date;
 }
+
+/** 
+ * Contexto Operativo del HUB
+ * §6.0 de los Informes Técnicos del HUB 
+ */
+export interface HubContext {
+  user: {
+    id: string;
+    email: string;
+    globalType: string;
+  };
+  tenant?: {
+    id: string;
+    roleId: string;
+    legalName: string;
+  };
+  permissions: string[];
+  modules: {
+    moduleId: string;
+    enabled: boolean;
+  }[];
+  navigation: any[]; // Se definirá con NavigationItem[] más adelante
+}
+
+/** 
+ * Sesión de Runtime del HUB
+ * §2.0 del Informe Técnico 04 
+ */
+export interface HubSession {
+  firebaseToken: string;
+  contextToken: string;
+  context: HubContext;
+  expiresAt: number;
+}

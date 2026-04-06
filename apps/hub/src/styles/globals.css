@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   TERABOUND — HUB Industrial Theme
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --brand-primary: #f97316; /* Naranja para el HUB para diferenciar del Backend Admin */
+    --brand-glow: rgba(249, 115, 22, 0.15);
+    --surface-bg: #05070a;
+    --surface-card: #0d1117;
+    --surface-elevated: #161b22;
+    --surface-border: rgba(139, 148, 158, 0.1);
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --text-muted: #484f58;
+    --success: #238636;
+    --warning: #d29922;
+    --danger: #da3633;
+    --info: #1f6feb;
+  }
+
+  body {
+    @apply bg-[var(--surface-bg)] text-[var(--text-primary)] font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 50% -20%, rgba(249, 115, 22, 0.08), transparent 70%),
+      radial-gradient(circle at 0% 100%, rgba(31, 111, 235, 0.03), transparent 50%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-900/40 backdrop-blur-md border border-surface-800/50 rounded-2xl;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-brand-500 hover:bg-brand-400 text-white font-bold rounded-xl
+           transition-all duration-300 shadow-lg shadow-brand-500/20 active:scale-95
+           flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-surface-800 hover:bg-surface-700 text-surface-200 font-bold rounded-xl
+           transition-all duration-300 border border-surface-700 active:scale-95
+           flex items-center justify-center gap-2;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-surface-950 border border-surface-800 rounded-xl
+           text-surface-100 focus:outline-none focus:ring-2 focus:ring-brand-500/50
+           transition-all duration-300 placeholder:text-surface-600;
+  }
+}
+
+/* Animaciones */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-in-out forwards;
+}

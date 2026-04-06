@@ -1,0 +1,45 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@terabound/domain": [
+        "../../packages/domain/src"
+      ],
+      "@terabound/firebase-client": [
+        "../../packages/firebase-client/src"
+      ],
+      "@terabound/config": [
+        "../../packages/config/src"
+      ],
+      "@terabound/repositories": [
+        "../../packages/repositories/src"
+      ],
+      "@terabound/auth": [
+        "../../packages/auth/src"
+      ],
+      "@terabound/ui": [
+        "../../packages/ui/src"
+      ]
+    },
+    "incremental": true,
+    "jsx": "preserve"
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -39,8 +39,33 @@ export default function PlatformModulesPage() {
     visibility: 'tenant-available',
     version: '0.0.1',
     sortOrder: 10,
-    icon: '📦'
+    icon: '📦',
+    type: 'crm'
   });
+
+  // Auto-sugestión y Normalización
+  const updateFormData = (updates: Partial<ModuleDefinition>) => {
+    setFormData(prev => {
+      const next = { ...prev, ...updates };
+      
+      // Normalización de slug a minúsculas
+      if (updates.slug) next.slug = updates.slug.toLowerCase();
+
+      // Sugerencias según arquitectura
+      if (updates.type) {
+        if (updates.type === 'hub' || updates.type === 'backend') {
+          next.category = 'core';
+          next.visibility = 'internal';
+        }
+      }
+
+      if (updates.category === 'micro-app') {
+        next.visibility = 'tenant-available';
+      }
+
+      return next;
+    });
+  };
 
   const repo = new FirestoreModulesRepository();
 
@@ -298,48 +323,52 @@ export default function PlatformModulesPage() {
                     placeholder="ej: finanzas"
                     className="input font-mono text-sm"
                     value={formData.slug || ''}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    onChange={(e) => updateFormData({ slug: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-surface-500 uppercase">Tipo</label>
+                  <label className="text-xs font-bold text-surface-500 uppercase">Tipo técnico del módulo</label>
                   <select 
                     className="input"
                     value={formData.type || ''}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    onChange={(e) => updateFormData({ type: e.target.value as any })}
                   >
-                    <option value="micro-app">Micro-App</option>
-                    <option value="core">Core</option>
-                    <option value="finanzas">Finanzas</option>
+                    <option value="">Seleccionar tipo...</option>
+                    <option value="backend">Backend Admin</option>
+                    <option value="hub">HUB Identity</option>
                     <option value="crm">CRM</option>
+                    <option value="finanzas">Finanzas</option>
                     <option value="work-orders">Work Orders</option>
+                    <option value="logistica-inventarios">Logística & Inventarios</option>
+                    <option value="rrhh">RRHH</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-surface-500 uppercase">Categoría</label>
+                  <label className="text-xs font-bold text-surface-500 uppercase">Categoría funcional</label>
                   <select 
                     className="input"
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    onChange={(e) => updateFormData({ category: e.target.value as any })}
                   >
-                    <option value="micro-app">Micro-App</option>
-                    <option value="core">Core</option>
-                    <option value="system">System</option>
+                    <option value="core">Core (Base)</option>
+                    <option value="micro-app">Micro-App (Tenant)</option>
+                    <option value="system">System (Servicios)</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-surface-500 uppercase">Estado Inicial</label>
+                  <label className="text-xs font-bold text-surface-500 uppercase">Estado operacional</label>
                   <select 
                     className="input"
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    onChange={(e) => updateFormData({ status: e.target.value as any })}
                   >
                     <option value="draft">Draft (Borrador)</option>
                     <option value="active">Active</option>
                     <option value="maintenance">Maintenance</option>
+                    <option value="deprecated">Deprecated (Obsoleto)</option>
                   </select>
                 </div>
               </div>
@@ -351,7 +380,7 @@ export default function PlatformModulesPage() {
                     type="text" 
                     className="input text-center text-xl"
                     value={formData.icon || ''}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                    onChange={(e) => updateFormData({ icon: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -360,20 +389,20 @@ export default function PlatformModulesPage() {
                     type="text" 
                     className="input font-mono"
                     value={formData.version || ''}
-                    onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                    onChange={(e) => updateFormData({ version: e.target.value })}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-surface-500 uppercase">Visibilidad</label>
+                <label className="text-xs font-bold text-surface-500 uppercase">Visibilidad y Alcance</label>
                 <select 
                   className="input"
                   value={formData.visibility}
-                  onChange={(e) => setFormData({ ...formData, visibility: e.target.value as any })}
+                  onChange={(e) => updateFormData({ visibility: e.target.value as any })}
                 >
-                  <option value="tenant-available">Disponible para Tenants</option>
-                  <option value="internal">Uso Interno Administrativo</option>
+                  <option value="tenant-available">Disponible para Tenants (Público)</option>
+                  <option value="internal">Uso Interno Administrativo (Plataforma)</option>
                 </select>
               </div>
 
@@ -384,7 +413,7 @@ export default function PlatformModulesPage() {
                   placeholder="1:PROJECT_NUMBER:web:APP_ID"
                   className="input text-xs font-mono"
                   value={formData.firebaseAppId || ''}
-                  onChange={(e) => setFormData({ ...formData, firebaseAppId: e.target.value })}
+                  onChange={(e) => updateFormData({ firebaseAppId: e.target.value })}
                 />
               </div>
             </form>
