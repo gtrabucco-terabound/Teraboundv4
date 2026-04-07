@@ -4,3 +4,4 @@
 // ============================================================
 
 export { AuthProvider, useAuth } from './auth-provider';
+export type { AuthContextValue } from './auth-provider';

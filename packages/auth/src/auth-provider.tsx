@@ -16,7 +16,7 @@ import {
 } from 'firebase/auth';
 import { getFirebaseAuth } from '@terabound/firebase-client';
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
