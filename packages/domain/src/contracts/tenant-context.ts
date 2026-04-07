@@ -106,12 +106,20 @@ export interface HubContext {
     id: string;
     email: string;
     globalType: string;
+    displayName?: string;
+    photoURL?: string;
   };
   tenant?: {
     id: string;
     roleId: string;
     legalName: string;
   };
+  availableTenants: {
+    id: string;
+    legalName: string;
+    roleId: string;
+    roleName: string;
+  }[];
   permissions: string[];
   modules: {
     moduleId: string;

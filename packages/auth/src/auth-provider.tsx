@@ -6,13 +6,23 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  type User 
+} from 'firebase/auth';
 import { getFirebaseAuth } from '@terabound/firebase-client';
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -25,16 +35,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const auth = getFirebaseAuth();
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
+
+  const signInWithEmail = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
+  };
+
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  };
+
+  const logout = async () => {
+    await firebaseSignOut(auth);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isAuthenticated: !!user,
+      signInWithEmail,
+      signInWithGoogle,
+      logout
+    }}>
       {children}
     </AuthContext.Provider>
   );

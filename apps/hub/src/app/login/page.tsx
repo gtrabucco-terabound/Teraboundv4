@@ -19,7 +19,14 @@ export default function LoginPage() {
       await signInWithEmail(email, password);
       window.location.href = '/';
     } catch (err: any) {
-      setError('Credenciales inválidas o cuenta no autorizada.');
+      console.error('[Login Error]', err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Email o contraseña incorrectos.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Demasiados intentos. Intenta más tarde.');
+      } else {
+        setError('Error de conexión o cuenta no autorizada.');
+      }
     } finally {
       setLoading(false);
     }

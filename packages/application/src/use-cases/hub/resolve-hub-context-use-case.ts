@@ -33,19 +33,38 @@ export class ResolveHubContextUseCase {
         id: user.userId,
         email: user.email,
         globalType: user.globalType,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
       },
+      tenant: undefined,
+      availableTenants: [],
       permissions: [],
       modules: [],
       navigation: [],
     };
 
-    // 2. Si se especifica un Tenant, cargar contexto específico
+    // 2. Cargar todas las membresías del usuario para el selector
+    const userMemberships = await this.membershipsRepo.listByUser(userId);
+    
+    // Resolver nombres de empresas y roles para el selector
+    context.availableTenants = await Promise.all(
+      userMemberships.map(async (m) => {
+        const t = await this.tenantsRepo.getById(m.tenantId);
+        const r = await this.rolesRepo.getById(m.roleId, m.tenantId);
+        return {
+          id: m.tenantId,
+          legalName: t?.legalName || 'Empresa Desconocida',
+          roleId: m.roleId,
+          roleName: r?.name || 'Rol Desconocido',
+        };
+      })
+    );
+
+    // 3. Si se especifica un Tenant, cargar contexto específico
     if (tenantId) {
       const tenant = await this.tenantsRepo.getById(tenantId);
       if (!tenant) throw new Error('Empresa no encontrada.');
 
-      // Buscar Membresía
-      const userMemberships = await this.membershipsRepo.listByUser(userId);
       const membership = userMemberships.find(m => m.tenantId === tenantId);
       
       if (!membership || membership.status !== 'active') {
@@ -53,7 +72,6 @@ export class ResolveHubContextUseCase {
       }
 
       // Resolver Roles y Permisos (Global + Tenant)
-      // Buscamos el rol asignado en la membresía
       const role = await this.rolesRepo.getById(membership.roleId, tenantId);
       
       context.tenant = {
@@ -64,7 +82,7 @@ export class ResolveHubContextUseCase {
 
       context.permissions = role?.permissions || [];
       
-      // En una fase posterior, aquí cargaríamos los módulos habilitados del tenant
+      // Módulos: En fase posterior cargaríamos los módulos habilitados del tenant
       context.modules = []; 
     }
 
