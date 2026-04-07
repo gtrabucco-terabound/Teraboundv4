@@ -5,31 +5,67 @@ import { useState, useEffect } from 'react';
 import { 
   Shield, 
   Building2, 
-  ChevronRight, 
   Loader2, 
   LogOut, 
   LayoutGrid,
   ArrowRight
 } from 'lucide-react';
 import type { HubContext } from '@terabound/domain';
+import { resolveHubContextAction, selectTenantAction, clearTenantAction } from './actions';
 
 export default function HubRoot() {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const [context, setContext] = useState<HubContext | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selecting, setSelecting] = useState<string | null>(null);
 
-  // Mock de resolución de contexto (se conectará al Use Case real via Server Action)
   useEffect(() => {
-    if (user && !authLoading) {
-      setTimeout(() => {
-         // Simulación de carga de contexto
-         setLoading(false);
-      }, 1500);
-    } else if (!authLoading && !user) {
-      // Redirigir a login si no hay sesión
+    if (authLoading) return;
+
+    if (!user) {
       window.location.href = '/login';
+      return;
     }
+
+    async function fetchContext() {
+      try {
+        const response = await resolveHubContextAction(user!.uid);
+        if (response.success && response.context) {
+          setContext(response.context);
+        } else {
+          setError(response.error || 'Error al resolver el contexto.');
+        }
+      } catch (err: any) {
+        setError('Error de red al contactar con el motor de contexto.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchContext();
   }, [user, authLoading]);
+
+  const handleSelectTenant = async (tenantId: string) => {
+    setSelecting(tenantId);
+    try {
+      await selectTenantAction(tenantId);
+      const response = await resolveHubContextAction(user!.uid, tenantId);
+      if (response.success) {
+        setContext(response.context!);
+        console.log('Contexto persistido:', tenantId);
+      }
+    } catch (err) {
+      setError('No se pudo establecer la sesión del tenant.');
+    } finally {
+      setSelecting(null);
+    }
+  };
+
+  const handleLogout = async () => {
+    await clearTenantAction();
+    await logout();
+  };
 
   if (authLoading || loading) {
      return (
@@ -41,6 +77,17 @@ export default function HubRoot() {
           <h2 className="text-2xl font-display font-bold text-surface-50 animate-fade-in uppercase tracking-[0.2em]">Terabound Hub</h2>
           <p className="text-surface-500 text-sm mt-4 font-mono animate-pulse uppercase tracking-wider">Sincronizando contexto de seguridad...</p>
           <Loader2 className="w-5 h-5 text-brand-400 animate-spin mt-8" />
+       </div>
+     );
+  }
+
+  if (error) {
+     return (
+       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-surface-950">
+          <Shield className="w-16 h-16 text-red-500 mb-4" />
+          <h2 className="text-xl font-bold text-surface-50">Acceso Denegado</h2>
+          <p className="text-red-400 text-sm mt-2">{error}</p>
+          <button onClick={() => handleLogout()} className="mt-8 btn-primary">Volver al Login</button>
        </div>
      );
   }
@@ -62,11 +109,11 @@ export default function HubRoot() {
 
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-surface-100">{user?.displayName || 'Usuario'}</p>
-            <p className="text-[10px] text-surface-500 font-mono">{user?.email}</p>
+            <p className="text-sm font-bold text-surface-100">{context?.user.displayName || 'Usuario'}</p>
+            <p className="text-[10px] text-surface-500 font-mono">{context?.user.email}</p>
           </div>
           <button 
-            onClick={() => signOut()}
+            onClick={() => handleLogout()}
             className="p-3 rounded-xl bg-surface-900 border border-surface-800 text-surface-400 hover:text-red-400 hover:bg-red-400/5 hover:border-red-400/20 transition-all"
           >
             <LogOut className="w-5 h-5" />
@@ -81,11 +128,11 @@ export default function HubRoot() {
            <div className="card p-8 space-y-6">
               <div className="flex items-center gap-4">
                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-surface-800 to-surface-700 border-2 border-surface-700 flex items-center justify-center overflow-hidden">
-                    {user?.photoURL ? <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" /> : <div className="text-2xl font-black text-surface-400 tracking-tighter">TB</div>}
+                    {context?.user.photoURL ? <img src={context.user.photoURL} alt="Avatar" className="w-full h-full object-cover" /> : <div className="text-2xl font-black text-surface-400 tracking-tighter">TB</div>}
                  </div>
                  <div>
                     <span className="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-widest">Global Account</span>
-                    <h2 className="text-lg font-bold text-surface-100 mt-1">{user?.displayName}</h2>
+                    <h2 className="text-lg font-bold text-surface-100 mt-1">{context?.user.displayName}</h2>
                  </div>
               </div>
               <div className="p-4 rounded-xl bg-surface-950/50 border border-surface-800/80">
@@ -121,37 +168,47 @@ export default function HubRoot() {
            </div>
 
            <div className="space-y-4">
-              {/* Aquí se iterarán las Membresías reales del usuario */}
-              <div className="card group hover:border-brand-500/40 p-1 cursor-pointer transition-all">
-                 <div className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                       <div className="w-14 h-14 rounded-2xl bg-surface-950 border border-surface-800 flex items-center justify-center group-hover:border-brand-500/30 transition-colors">
-                          <Building2 className="w-7 h-7 text-surface-600 group-hover:text-brand-500 transition-colors" />
-                       </div>
-                       <div>
-                          <h4 className="text-lg font-bold text-surface-100 uppercase tracking-tight">Power Oil SA</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                             <span className="text-[10px] bg-brand-500/10 text-brand-400 px-2 py-0.5 rounded font-black uppercase tracking-tighter border border-brand-500/20">ADMIN_ROLE</span>
-                             <span className="text-[10px] text-surface-600 font-mono uppercase">ID: power-oil-504</span>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-surface-950 border border-surface-800 flex items-center justify-center group-hover:bg-brand-500 group-hover:border-brand-500 transition-all">
-                       <ArrowRight className="w-5 h-5 text-surface-500 group-hover:text-white transition-all transform group-hover:translate-x-1" />
-                    </div>
-                 </div>
-              </div>
-
-              {/* Placeholder para cuando no hay tenants */}
-              <div className="bg-surface-900/30 border-2 border-dashed border-surface-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4">
-                 <div className="w-12 h-12 rounded-full bg-surface-800 flex items-center justify-center">
-                    <Plus className="w-6 h-6 text-surface-600" />
-                 </div>
-                 <div className="max-w-xs">
-                    <p className="text-sm font-bold text-surface-300">¿No ves tu empresa?</p>
-                    <p className="text-xs text-surface-600 mt-2">Contacta a tu administrador para que te asigne una membresía de plataforma.</p>
-                 </div>
-              </div>
+              {context?.availableTenants && context.availableTenants.length > 0 ? (
+                context.availableTenants.map((tenant) => (
+                  <div 
+                    key={tenant.id} 
+                    onClick={() => !selecting && handleSelectTenant(tenant.id)}
+                    className={`card group hover:border-brand-500/40 p-1 cursor-pointer transition-all ${selecting === tenant.id ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                     <div className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                           <div className="w-14 h-14 rounded-2xl bg-surface-950 border border-surface-800 flex items-center justify-center group-hover:border-brand-500/30 transition-colors">
+                              <Building2 className={`w-7 h-7 transition-colors ${selecting === tenant.id ? 'text-brand-500' : 'text-surface-600 group-hover:text-brand-500'}`} />
+                           </div>
+                           <div>
+                              <h4 className="text-lg font-bold text-surface-100 uppercase tracking-tight">{tenant.legalName}</h4>
+                              <div className="flex items-center gap-3 mt-1">
+                                 <span className="text-[10px] bg-brand-500/10 text-brand-400 px-2 py-0.5 rounded font-black uppercase tracking-tighter border border-brand-500/20">{tenant.roleName}</span>
+                                 <span className="text-[10px] text-surface-600 font-mono uppercase">ID: {tenant.id}</span>
+                              </div>
+                           </div>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-surface-950 border border-surface-800 flex items-center justify-center group-hover:bg-brand-500 group-hover:border-brand-500 transition-all text-surface-500 group-hover:text-white">
+                           {selecting === tenant.id ? (
+                             <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
+                           ) : (
+                             <ArrowRight className="w-5 h-5 transition-all transform group-hover:translate-x-1" />
+                           )}
+                        </div>
+                     </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-surface-900/30 border-2 border-dashed border-surface-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4">
+                   <div className="w-12 h-12 rounded-full bg-surface-800 flex items-center justify-center">
+                      <Plus className="w-6 h-6 text-surface-600" />
+                   </div>
+                   <div className="max-w-xs">
+                      <p className="text-sm font-bold text-surface-300">¿No ves tu empresa?</p>
+                      <p className="text-xs text-surface-600 mt-2">Contacta a tu administrador para que te asigne una membresía de plataforma.</p>
+                   </div>
+                </div>
+              )}
            </div>
         </div>
         

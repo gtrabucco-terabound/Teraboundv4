@@ -35,6 +35,7 @@ export interface Tenant {
 export interface Membership {
   id?: string;
   userId: string;
+  tenantId?: string; // GAP: Requerido para resolución en el HUB (collectionGroup)
   roleId: string;
   status: MembershipStatus;
   moduleAccess: string[];

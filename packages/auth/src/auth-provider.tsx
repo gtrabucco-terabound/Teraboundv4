@@ -29,6 +29,9 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   isAuthenticated: false,
+  signInWithEmail: async (email: string, pass: string) => {},
+  signInWithGoogle: async () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {

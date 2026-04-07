@@ -43,6 +43,7 @@ export class FirestoreMembershipsRepository implements MembershipsRepository {
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
+      tenantId: doc.ref.parent.parent?.id, // Extracción del ID del tenant padre
       ...doc.data()
     } as Membership));
   }
@@ -52,7 +53,7 @@ export class FirestoreMembershipsRepository implements MembershipsRepository {
     const docRef = doc(db, 'tenants', tenantId, this.collectionName, membershipId);
     const snapshot = await getDoc(docRef);
     if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() } as Membership;
+    return { id: snapshot.id, tenantId, ...snapshot.data() } as Membership;
   }
 
   async create(tenantId: string, membership: Omit<Membership, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>): Promise<string> {

@@ -16,7 +16,8 @@ export type {
 } from './contracts/tenant-context';
 
 
-// Platform
+export type { HubContext, HubSession } from './contracts/tenant-context';
+
 export type {
   PlatformConfig,
   ModuleDefinition,

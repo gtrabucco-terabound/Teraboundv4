@@ -3,8 +3,8 @@ import type {
   MembershipsRepository, 
   RolesRepository, 
   TenantsRepository 
-} from '../../../contracts/security-repositories';
-import type { HubContext, UserRecord } from '@terabound/domain';
+} from '@terabound/repositories';
+import type { HubContext, UserRecord, Membership } from '@terabound/domain';
 
 export interface ResolveHubContextRequest {
   userId: string;
@@ -48,11 +48,11 @@ export class ResolveHubContextUseCase {
     
     // Resolver nombres de empresas y roles para el selector
     context.availableTenants = await Promise.all(
-      userMemberships.map(async (m) => {
-        const t = await this.tenantsRepo.getById(m.tenantId);
+      userMemberships.map(async (m: Membership) => {
+        const t = await this.tenantsRepo.getById(m.tenantId!);
         const r = await this.rolesRepo.getById(m.roleId, m.tenantId);
         return {
-          id: m.tenantId,
+          id: m.tenantId!,
           legalName: t?.legalName || 'Empresa Desconocida',
           roleId: m.roleId,
           roleName: r?.name || 'Rol Desconocido',
@@ -65,7 +65,7 @@ export class ResolveHubContextUseCase {
       const tenant = await this.tenantsRepo.getById(tenantId);
       if (!tenant) throw new Error('Empresa no encontrada.');
 
-      const membership = userMemberships.find(m => m.tenantId === tenantId);
+      const membership = userMemberships.find((m: Membership) => m.tenantId === tenantId);
       
       if (!membership || membership.status !== 'active') {
         throw new Error('No tienes acceso activo a esta empresa.');
