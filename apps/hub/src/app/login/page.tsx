@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useAuth } from '@terabound/auth';
-import { Shield, Key, Loader2, ArrowRight, Github, Chrome } from 'lucide-react';
+import { Shield, Key, Loader2, ArrowRight, Github, Chrome, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { requestPasswordResetAction } from '../actions';
 
 export default function LoginPage() {
   const { signInWithEmail, signInWithGoogle, loading: authLoading } = useAuth();
@@ -10,6 +11,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStatus, setForgotStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +33,23 @@ export default function LoginPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    
+    setForgotStatus('sending');
+    try {
+      const res = await requestPasswordResetAction(forgotEmail);
+      if (res.success) {
+        setForgotStatus('success');
+      } else {
+        setForgotStatus('error');
+      }
+    } catch (err) {
+      setForgotStatus('error');
     }
   };
 
@@ -88,7 +109,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                  <div className="flex items-center justify-between px-1">
                     <label className="text-[10px] font-black uppercase text-surface-600 tracking-widest">Password</label>
-                    <a href="#" className="text-[10px] font-black uppercase text-brand-500 hover:text-brand-400 transition-colors">¿Olvidaste?</a>
+                    <button 
+                      type="button"
+                      onClick={() => setShowForgotModal(true)}
+                      className="text-[10px] font-black uppercase text-brand-500 hover:text-brand-400 transition-colors"
+                    >
+                      ¿Olvidaste?
+                    </button>
                  </div>
                  <input 
                    type="password" 
@@ -144,6 +171,62 @@ export default function LoginPage() {
 
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-surface-950/80 backdrop-blur-sm animate-fade-in">
+           <div className="w-full max-w-sm bg-surface-900 border border-surface-800 rounded-3xl p-8 shadow-2xl animate-scale-in">
+              {forgotStatus === 'success' ? (
+                <div className="text-center space-y-6">
+                   <div className="w-16 h-16 rounded-full bg-brand-500/10 flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-8 h-8 text-brand-500" />
+                   </div>
+                   <div className="space-y-2">
+                      <h4 className="text-xl font-bold text-surface-50">Solicitud Enviada</h4>
+                      <p className="text-xs text-surface-400 leading-relaxed">Hemos notificado al Super Administrador. Tu clave será restablecida manualmente a la brevedad.</p>
+                   </div>
+                   <button onClick={() => { setShowForgotModal(false); setForgotStatus('idle'); }} className="btn-primary w-full">ENTENDIDO</button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-6">
+                   <div className="flex items-center gap-4 text-brand-500">
+                      <Mail className="w-6 h-6" />
+                      <h4 className="text-lg font-bold text-surface-50">Recuperar Acceso</h4>
+                   </div>
+                   <p className="text-xs text-surface-400 leading-relaxed italic">
+                     Ingresa tu email y enviaremos una alerta al Super Administrador para que restablezca tu clave de plataforma.
+                   </p>
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-surface-500 tracking-widest px-1">Tu Email de Acceso</label>
+                      <input 
+                        type="email" 
+                        required 
+                        className="input" 
+                        placeholder="nombre@empresa.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                      />
+                   </div>
+                   {forgotStatus === 'error' && (
+                     <div className="p-3 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-bold flex items-center gap-2">
+                        <AlertCircle className="w-3 h-3" /> Error al enviar la solicitud.
+                     </div>
+                   )}
+                   <div className="flex gap-3">
+                      <button type="button" onClick={() => setShowForgotModal(false)} className="btn-secondary flex-1 py-3 text-xs">CANCELAR</button>
+                      <button type="submit" disabled={forgotStatus === 'sending'} className="btn-primary flex-1 py-3 text-xs">
+                        {forgotStatus === 'sending' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'SOLICITAR'}
+                      </button>
+                   </div>
+                </form>
+              )}
+           </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
 
     </div>
   );

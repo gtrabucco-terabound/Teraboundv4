@@ -18,22 +18,19 @@ import {
   Circle
 } from 'lucide-react';
 import type { RoleDefinition, Tenant } from '@terabound/domain';
+import { Permissions } from '@terabound/config';
 import { createRoleAction, updateRoleAction, getRolesAction } from './actions';
 import { getTenantsAction } from '../../tenants/actions';
 
-// Permisos Mock de ejemplo (deberían venir de una configuración centralizada)
-const AVAILABLE_PERMISSIONS = [
-  { module: 'Plataforma', key: 'platform.admin', name: 'Super Admin' },
-  { module: 'Tenants', key: 'tenants.read', name: 'Ver Tenants' },
-  { module: 'Tenants', key: 'tenants.manage', name: 'Gestionar Tenants' },
-  { module: 'Seguridad', key: 'security.users.read', name: 'Ver Usuarios' },
-  { module: 'Seguridad', key: 'security.users.manage', name: 'Gestionar Usuarios' },
-  { module: 'Seguridad', key: 'security.roles.manage', name: 'Gestionar Roles' },
-  { module: 'CRM', key: 'crm.leads.read', name: 'Ver Leads' },
-  { module: 'CRM', key: 'crm.leads.manage', name: 'Gestionar Leads' },
-  { module: 'Finanzas', key: 'finance.invoices.read', name: 'Ver Facturas' },
-  { module: 'Finanzas', key: 'finance.invoices.manage', name: 'Gestionar Facturas' },
-];
+// Generación dinámica de permisos para la UI basada en la configuración centralizada
+const AVAILABLE_PERMISSIONS = Object.entries(Permissions).map(([_, value]) => {
+  const [module, entity, action] = value.split('.');
+  return {
+    module: module.toUpperCase(),
+    key: value,
+    name: `${entity} ${action}`.replace(/_/g, ' '),
+  };
+});
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<RoleDefinition[]>([]);

@@ -11,6 +11,7 @@ export type { EnvironmentsRepository } from './contracts/environments-repository
 export type { ReleasesRepository } from './contracts/releases-repository';
 export type { TenantsRepository } from './contracts/tenants-repository';
 export type { TenantsModulesRepository } from './contracts/tenants-modules-repository';
+export type { IncidentsRepository, Incident } from './contracts/incidents-repository';
 export * from './contracts/security-repositories';
 export * from './contracts/navigation-repository';
 export * from './contracts/catalog-repository';
@@ -26,6 +27,7 @@ export { FirestoreEnvironmentsRepository } from './firestore/firestore-environme
 export { FirestoreReleasesRepository } from './firestore/firestore-releases-repository';
 export { FirestoreTenantsRepository } from './firestore/firestore-tenants-repository';
 export { FirestoreTenantsModulesRepository } from './firestore/firestore-tenants-modules-repository';
+export { FirestoreIncidentsRepository } from './firestore/firestore-incidents-repository';
 export * from './firestore/firestore-users-repository';
 export * from './firestore/firestore-memberships-repository';
 export * from './firestore/firestore-roles-repository';

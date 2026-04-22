@@ -6,7 +6,10 @@ import {
   FirestoreUsersRepository,
   FirestoreMembershipsRepository,
   FirestoreRolesRepository,
-  FirestoreTenantsRepository
+  FirestoreTenantsRepository,
+  FirestoreTenantsModulesRepository,
+  FirestoreModulesRepository,
+  FirestoreIncidentsRepository
 } from '@terabound/repositories';
 
 const COOKIE_NAME = 'tb_selected_tenant_id';
@@ -20,7 +23,9 @@ export async function resolveHubContextAction(userId: string, tenantId?: string)
       new FirestoreUsersRepository(),
       new FirestoreMembershipsRepository(),
       new FirestoreRolesRepository(),
-      new FirestoreTenantsRepository()
+      new FirestoreTenantsRepository(),
+      new FirestoreTenantsModulesRepository(),
+      new FirestoreModulesRepository()
     );
 
     const context = await useCase.execute({ userId, tenantId: activeTenantId });
@@ -46,4 +51,23 @@ export async function clearTenantAction() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
   return { success: true };
+}
+
+export async function requestPasswordResetAction(email: string) {
+  try {
+    const repo = new FirestoreIncidentsRepository();
+    await repo.create({
+      type: 'PASSWORD_RESET',
+      status: 'open',
+      priority: 'high',
+      title: `Solicitud de recuperación de clave: ${email}`,
+      description: `El usuario con email ${email} ha solicitado restablecer su contraseña desde el HUB. Notificar al Super Admin.`,
+      metadata: { email },
+      createdBy: 'system_hub'
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error('[requestPasswordResetAction] Error:', error);
+    return { success: false, error: 'No se pudo enviar la solicitud.' };
+  }
 }

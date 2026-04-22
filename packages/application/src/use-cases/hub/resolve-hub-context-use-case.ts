@@ -2,7 +2,9 @@ import type {
   UsersRepository, 
   MembershipsRepository, 
   RolesRepository, 
-  TenantsRepository 
+  TenantsRepository,
+  TenantsModulesRepository,
+  ModulesRepository
 } from '@terabound/repositories';
 import type { HubContext, UserRecord, Membership } from '@terabound/domain';
 
@@ -16,7 +18,9 @@ export class ResolveHubContextUseCase {
     private readonly usersRepo: UsersRepository,
     private readonly membershipsRepo: MembershipsRepository,
     private readonly rolesRepo: RolesRepository,
-    private readonly tenantsRepo: TenantsRepository
+    private readonly tenantsRepo: TenantsRepository,
+    private readonly tenantModulesRepo: TenantsModulesRepository,
+    private readonly modulesRepo: ModulesRepository
   ) {}
 
   async execute(request: ResolveHubContextRequest): Promise<HubContext> {
@@ -82,8 +86,24 @@ export class ResolveHubContextUseCase {
 
       context.permissions = role?.permissions || [];
       
-      // Módulos: En fase posterior cargaríamos los módulos habilitados del tenant
-      context.modules = []; 
+      // 4. Cargar Módulos habilitados del tenant con su metadata
+      const enabledModules = await this.tenantModulesRepo.list(tenantId);
+      const activeModules = enabledModules.filter(m => m.status === 'active');
+      
+      context.modules = await Promise.all(
+        activeModules.map(async (tm) => {
+          const metadata = await this.modulesRepo.getById(tm.moduleId);
+          return {
+            moduleId: tm.moduleId,
+            enabled: true,
+            // Agregamos metadata extra para la UI del App Launcher (aunque no esté en la interfaz base, JS lo permite)
+            name: metadata?.name || tm.moduleId,
+            slug: metadata?.slug || tm.moduleId,
+            icon: metadata?.icon,
+            category: metadata?.category
+          } as any;
+        })
+      );
     }
 
     return context;

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { FirestoreNavigationRepository, FirestoreNavigationItemsRepository } from '@terabound/repositories';
 import type { NavigationSchema, NavigationItem } from '@terabound/domain';
+import { BaseModules } from '@terabound/config';
 
 // --- Subcomponente para Item de Árbol ---
 function MenuItemNode({
@@ -412,15 +413,16 @@ export default function NavigationMenusPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Visibilidad</label>
+                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Módulo Dueño (Propietario)</label>
                     <select
                       className="input appearance-none bg-surface-950"
-                      value={formData.visibility}
-                      onChange={(e) => setFormData({ ...formData, visibility: e.target.value as any })}
+                      value={formData.moduleId || ''}
+                      onChange={(e) => setFormData({ ...formData, moduleId: e.target.value || undefined })}
                     >
-                      <option value="always">Siempre Visible</option>
-                      <option value="module-enabled">Módulo Habilitado</option>
-                      <option value="role-based">Basado en Roles</option>
+                      <option value="">Ninguno (Global)</option>
+                      {BaseModules.map(m => (
+                        <option key={m.slug} value={m.slug}>{m.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -436,20 +438,34 @@ export default function NavigationMenusPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Badge Notificación</label>
-                  <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-600" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Visibilidad</label>
                     <select
-                      className="input pl-10 appearance-none bg-surface-950"
-                      value={formData.badgeType}
-                      onChange={(e) => setFormData({ ...formData, badgeType: e.target.value as any })}
+                      className="input appearance-none bg-surface-950"
+                      value={formData.visibility}
+                      onChange={(e) => setFormData({ ...formData, visibility: e.target.value as any })}
                     >
-                      <option value="none">Sin Badge</option>
-                      <option value="info">Informativo (Azul)</option>
-                      <option value="warning">Advertencia (Naranja)</option>
-                      <option value="error">Error/Crítico (Rojo)</option>
+                      <option value="always">Siempre Visible</option>
+                      <option value="module-enabled">Módulo Habilitado</option>
+                      <option value="role-based">Basado en Roles</option>
                     </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Badge Notificación</label>
+                    <div className="relative">
+                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-600" />
+                      <select
+                        className="input pl-10 appearance-none bg-surface-950"
+                        value={formData.badgeType}
+                        onChange={(e) => setFormData({ ...formData, badgeType: e.target.value as any })}
+                      >
+                        <option value="none">Sin Badge</option>
+                        <option value="info">Informativo (Azul)</option>
+                        <option value="warning">Advertencia (Naranja)</option>
+                        <option value="error">Error/Crítico (Rojo)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -463,6 +479,20 @@ export default function NavigationMenusPage() {
                       className="input pl-10 text-xs"
                       value={formData.requiredPermissions?.join(', ')}
                       onChange={(e) => setFormData({ ...formData, requiredPermissions: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Módulos Requeridos (CSV)</label>
+                  <div className="relative">
+                    <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-600" />
+                    <input
+                      type="text"
+                      placeholder="ej: crm, billing"
+                      className="input pl-10 text-xs"
+                      value={formData.requiredModules?.join(', ')}
+                      onChange={(e) => setFormData({ ...formData, requiredModules: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                     />
                   </div>
                 </div>
