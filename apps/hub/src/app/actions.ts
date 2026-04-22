@@ -56,7 +56,7 @@ export async function clearTenantAction() {
 
 export async function requestPasswordResetAction(email: string) {
   try {
-    const repo = new FirestoreAdminIncidentsRepository();
+    const repo = new FirestoreIncidentsRepository();
     await repo.create({
       type: 'PASSWORD_RESET',
       status: 'open',
@@ -68,7 +68,11 @@ export async function requestPasswordResetAction(email: string) {
     });
     return { success: true };
   } catch (error: any) {
-    console.error('[requestPasswordResetAction] Error:', error);
-    return { success: false, error: 'No se pudo enviar la solicitud.' };
+    console.error('[requestPasswordResetAction] CRITICAL ERROR:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    return { success: false, error: 'No se pudo procesar la solicitud. Por favor contacta al administrador.' };
   }
 }

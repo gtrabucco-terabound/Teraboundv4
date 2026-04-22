@@ -143,7 +143,8 @@ service cloud.firestore {
 
     match /_gl_incidents/{incidentId} {
       allow read: if isPlatformAdmin();
-      allow write: if isPlatformAdmin();
+      allow create: if (request.resource.data.type == 'PASSWORD_RESET') || isPlatformAdmin();
+      allow update, delete: if isPlatformAdmin();
     }
 
     // Automation
