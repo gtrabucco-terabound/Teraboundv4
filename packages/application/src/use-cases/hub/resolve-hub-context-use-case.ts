@@ -1,7 +1,7 @@
-import type { 
-  UsersRepository, 
-  MembershipsRepository, 
-  RolesRepository, 
+import type {
+  UsersRepository,
+  MembershipsRepository,
+  RolesRepository,
   TenantsRepository,
   TenantsModulesRepository,
   ModulesRepository
@@ -21,7 +21,7 @@ export class ResolveHubContextUseCase {
     private readonly tenantsRepo: TenantsRepository,
     private readonly tenantModulesRepo: TenantsModulesRepository,
     private readonly modulesRepo: ModulesRepository
-  ) {}
+  ) { }
 
   async execute(request: ResolveHubContextRequest): Promise<HubContext> {
     const { userId, tenantId } = request;
@@ -49,7 +49,7 @@ export class ResolveHubContextUseCase {
 
     // 2. Cargar todas las membresías del usuario para el selector
     const userMemberships = await this.membershipsRepo.listByUser(userId);
-    
+
     // Resolver nombres de empresas y roles para el selector
     context.availableTenants = await Promise.all(
       userMemberships.map(async (m: Membership) => {
@@ -70,14 +70,14 @@ export class ResolveHubContextUseCase {
       if (!tenant) throw new Error('Empresa no encontrada.');
 
       const membership = userMemberships.find((m: Membership) => m.tenantId === tenantId);
-      
+
       if (!membership || membership.status !== 'active') {
         throw new Error('No tienes acceso activo a esta empresa.');
       }
 
       // Resolver Roles y Permisos (Global + Tenant)
       const role = await this.rolesRepo.getById(membership.roleId, tenantId);
-      
+
       context.tenant = {
         id: tenantId,
         roleId: membership.roleId,
@@ -85,11 +85,11 @@ export class ResolveHubContextUseCase {
       };
 
       context.permissions = role?.permissions || [];
-      
+
       // 4. Cargar Módulos habilitados del tenant con su metadata
       const enabledModules = await this.tenantModulesRepo.list(tenantId);
-      const activeModules = enabledModules.filter(m => m.status === 'active');
-      
+      const activeModules = enabledModules.filter(m => m.status === 'Enabled');
+
       context.modules = await Promise.all(
         activeModules.map(async (tm) => {
           const metadata = await this.modulesRepo.getById(tm.moduleId);
