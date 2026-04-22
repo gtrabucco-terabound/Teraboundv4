@@ -9,7 +9,8 @@ import {
   FirestoreTenantsRepository,
   FirestoreTenantsModulesRepository,
   FirestoreModulesRepository,
-  FirestoreIncidentsRepository
+  FirestoreIncidentsRepository,
+  FirestoreAdminIncidentsRepository
 } from '@terabound/repositories';
 
 const COOKIE_NAME = 'tb_selected_tenant_id';
@@ -55,7 +56,7 @@ export async function clearTenantAction() {
 
 export async function requestPasswordResetAction(email: string) {
   try {
-    const repo = new FirestoreIncidentsRepository();
+    const repo = new FirestoreAdminIncidentsRepository();
     await repo.create({
       type: 'PASSWORD_RESET',
       status: 'open',
