@@ -94,6 +94,8 @@ export async function resetUserPasswordAction(userId: string, newPassword: strin
     source: MOCK_ACTOR.source,
     severity: 'critical',
     status: 'success',
-    description: 'Reseteo manual de contraseña realizado por el administrador.'
+    metadata: {
+      message: 'Reseteo manual de contraseña realizado por el administrador.'
+    }
   });
 }
