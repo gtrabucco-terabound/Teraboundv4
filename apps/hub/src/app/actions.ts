@@ -9,9 +9,9 @@ import {
   FirestoreTenantsRepository,
   FirestoreTenantsModulesRepository,
   FirestoreModulesRepository,
-  FirestoreIncidentsRepository,
-  FirestoreAdminIncidentsRepository
+  FirestoreIncidentsRepository
 } from '@terabound/repositories';
+import { FirestoreAdminIncidentsRepository } from '@terabound/repositories/src/admin';
 
 const COOKIE_NAME = 'tb_selected_tenant_id';
 

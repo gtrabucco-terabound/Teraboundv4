@@ -28,7 +28,6 @@ export { FirestoreReleasesRepository } from './firestore/firestore-releases-repo
 export { FirestoreTenantsRepository } from './firestore/firestore-tenants-repository';
 export { FirestoreTenantsModulesRepository } from './firestore/firestore-tenants-modules-repository';
 export { FirestoreIncidentsRepository } from './firestore/firestore-incidents-repository';
-export { FirestoreAdminIncidentsRepository } from './firestore/admin/firestore-admin-incidents-repository';
 export * from './firestore/firestore-users-repository';
 export * from './firestore/firestore-memberships-repository';
 export * from './firestore/firestore-roles-repository';
