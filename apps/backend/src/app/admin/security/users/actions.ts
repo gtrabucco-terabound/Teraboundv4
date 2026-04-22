@@ -77,3 +77,23 @@ export async function toggleUserStatusAction(id: string, active: boolean): Promi
     status: 'success'
   });
 }
+
+export async function resetUserPasswordAction(userId: string, newPassword: string): Promise<void> {
+  const { getAuthAdmin } = await import('@terabound/firebase-admin');
+  const auth = getAuthAdmin();
+  
+  await auth.updateUser(userId, { password: newPassword });
+
+  await auditService.logGlobal({
+    eventType: 'SECURITY_PASSWORD_RESET_MANUAL',
+    entityId: userId,
+    entityType: 'user',
+    actorUserId: MOCK_ACTOR.actorUserId,
+    actorType: MOCK_ACTOR.actorType,
+    action: 'UPDATE',
+    source: MOCK_ACTOR.source,
+    severity: 'critical',
+    status: 'success',
+    description: 'Reseteo manual de contraseña realizado por el administrador.'
+  });
+}

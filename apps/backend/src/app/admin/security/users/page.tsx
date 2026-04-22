@@ -20,7 +20,8 @@ import {
   getUsersAction, 
   createUserAction, 
   updateUserAction, 
-  toggleUserStatusAction 
+  toggleUserStatusAction, 
+  resetUserPasswordAction
 } from './actions';
 import { UserStatus, GlobalType } from '@terabound/domain';
 import type { UserRecord } from '@terabound/domain';
@@ -47,6 +48,12 @@ export default function UsersPage() {
     globalType: 'standard' as any,
     status: 'active',
   });
+
+  // Estados para reseteo de clave
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -96,6 +103,21 @@ export default function UsersPage() {
       await loadUsers();
     } catch (err) {
       alert('Error al cambiar estado.');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUser || !newPassword) return;
+    try {
+      setIsResetting(true);
+      await resetUserPasswordAction(selectedUser.userId, newPassword);
+      alert('Contraseña actualizada correctamente.');
+      setIsPasswordModalOpen(false);
+      setNewPassword('');
+    } catch (err: any) {
+      alert('Error al resetear contraseña: ' + err.message);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -224,6 +246,16 @@ export default function UsersPage() {
                         >
                           {user.status === UserStatus.ACTIVE ? <UserMinus className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                         </button>
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setIsPasswordModalOpen(true);
+                          }}
+                          className="p-2 rounded-lg bg-surface-800/50 text-brand-400 hover:text-brand-300 transition-colors border border-surface-700/50"
+                          title="Resetear Contraseña"
+                        >
+                          <Key className="w-4 h-4" />
+                        </button>
                         <button className="p-2 rounded-lg bg-surface-800/50 text-surface-400 hover:text-surface-100 transition-colors border border-surface-700/50">
                           <Activity className="w-4 h-4" />
                         </button>
@@ -329,6 +361,58 @@ export default function UsersPage() {
                     Creando Usuario...
                   </>
                 ) : 'Crear Usuario'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Reseteo de Clave */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-surface-950/80 backdrop-blur-md animate-fade-in">
+          <div className="card w-full max-w-md p-6 space-y-6 animate-scale-in border-brand-500/20">
+            <div className="flex items-center gap-4 border-b border-surface-800 pb-4">
+              <div className="p-3 rounded-full bg-brand-500/10 text-brand-400">
+                <Key className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-surface-50">Restablecer Clave</h3>
+                <p className="text-xs text-surface-500">Usuario: {selectedUser?.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-surface-500">Nueva Contraseña</label>
+                <input
+                  type="password"
+                  className="input font-mono"
+                  placeholder="********"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="p-3 rounded-lg bg-orange-500/5 border border-orange-500/20 text-[10px] text-orange-400 leading-relaxed">
+                ⚠️ Esta acción es inmediata y el usuario deberá usar esta nueva clave para ingresar la próxima vez.
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setIsPasswordModalOpen(false);
+                  setNewPassword('');
+                }}
+                className="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={isResetting || newPassword.length < 6}
+                className="btn-primary flex-1"
+              >
+                {isResetting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Cambios'}
               </button>
             </div>
           </div>
