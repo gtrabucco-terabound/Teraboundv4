@@ -88,7 +88,7 @@ export class ResolveHubContextUseCase {
 
       // 4. Cargar Módulos habilitados del tenant con su metadata
       const enabledModules = await this.tenantModulesRepo.list(tenantId);
-      const activeModules = enabledModules.filter(m => m.status === 'Enabled');
+      const activeModules = enabledModules.filter(m => m.status === 'enabled');
 
       context.modules = await Promise.all(
         activeModules.map(async (tm) => {
